@@ -12,7 +12,7 @@ NC='\e[0m'
 YELLOW='\e[1;33m'
 
 
-DEPENDENCIES='cat sed grep ctorrent mktorrent mount df'
+DEPENDENCIES='cat sed grep ctorrent mktorrent mount df sudo'
 
 
 
@@ -37,6 +37,9 @@ choose_drive_to_capture () {
 }
 
 
+unmount_drive () {
+
+}
 
 
 
@@ -83,6 +86,28 @@ while [[ $drive == '/dev/null' ]] ; do
 		fi
 	fi
 done
+
+if mount | grep $drive &> /dev/null ; then
+	echo -e "${RED}$drive is currently mounted."
+	echo -e "This might have uninteneded effects.${NC}"
+	read -p "Would you like to unmount the drive? [Y|n] " option
+	if [[ ! ( $option == "n" ||
+	          $option == "N" ||
+	          $option == "no" ) ]] ; then
+
+		sudo umount $drive
+
+		if mount | grep $drive &> /dev/null ; then
+			echo -e "${RED}$drive is still mounted. Unmount attempt failed."
+			echo -e "Exiting...${NC}"
+			exit 1
+		fi
+	fi
+fi
+
+
+
+
 
 
 
