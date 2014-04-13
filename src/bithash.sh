@@ -165,7 +165,9 @@ choose_part_aware () {
 	while [[ $part_aware == "" ]] ; do
 		echo -e "${CYAN}BitHash can be partition aware, meaning that it can"
 		echo -e "split up the drive based on partition bounderys and each"
-		echo -e "will be put in a seperate dd based image file.${NC}"
+		echo -e "will be put in a seperate dd based image file."
+		echo -e "Each section of unallocated space will be considered"
+	 	echo -e "another partition.${NC}"
 		read -p "Would you like BitHash to be partition aware? [y|N] " option
 
 		if [[ ( $option == "y" ||
