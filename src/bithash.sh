@@ -35,7 +35,7 @@ NC='\e[0m'
 YELLOW='\e[1;33m'
 
 
-DEPENDENCIES='cat sed grep ctorrent mktorrent mount df sudo'
+DEPENDENCIES='cat sed grep ctorrent mktorrent mount df sudo umount read'
 
 
 
@@ -128,6 +128,30 @@ else
 	echo -e "${GREEN}$drive is not mounted ${NC}"
 fi
 
+
+workspace=""
+while [[ $workspace == "" ]] ; do
+	read -p "Enter a directory to act as a workspace: (default- pwd) " option
+
+	if [[ $option == "" ]] ; then
+		$option == `pwd`
+	fi
+		
+
+	if [[ -d $option ]] ; then
+		if [[ ! ( -x $option &&
+		          -w $option &&
+		          -r $option )) ]] ; then
+			echo -e "${RED}You do not have full permissions in the directory"
+			echo -e "$option. Please choose a directory where you have"
+			echo -e "full permissions.${NC}"
+
+			workspace=""
+		else
+			workspace=$option
+		fi
+	fi
+done
 
 
 
