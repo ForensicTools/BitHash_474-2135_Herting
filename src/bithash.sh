@@ -4,6 +4,7 @@
 
 
 
+
 # Define some color escape codes used later on
 GREEN='\e[1;32m'
 RED='\e[0;31m'
@@ -97,13 +98,13 @@ if mount | grep $drive &> /dev/null ; then
 			echo -e "${RED}$drive is still mounted. Unmount attempt failed."
 			echo -e "Exiting...${NC}"
 			exit 1
+		else
+			echo -e "${GREEN}$drive was unmounted${NC}"
 		fi
 	fi
+else
+	echo -e "${GREEN}$drive is not mounted ${NC}"
 fi
-
-
-
-
 
 
 
