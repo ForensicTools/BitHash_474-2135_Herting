@@ -155,6 +155,8 @@ ws_choose () {
 			else
 				workspace=$option
 			fi
+		else
+			echo -e "${RED}Directory ${option} does not exist.${NC}"
 		fi
 	done
 }
