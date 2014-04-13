@@ -177,11 +177,23 @@ output_options () {
 }
 
 
+check_valid () {
+	if [[ ( $workspace == '' ||
+	        $drive == '/dev/null )' ]] ; then
+		return 1
+	else
+		return 0
+	fi
+}
+
+
 
 make_selections () {
-	while ! output_options ; do 
+	while ! check_valid ; do 
 		disk_choose
 		ws_choose
+
+		output_options
 	done
 }
 	
