@@ -17,7 +17,7 @@ DEPENDENCIES='cat sed grep ctorrent mktorrent mount df'
 
 
 choose_drive_to_capture () {
-	read -p "Please specify a drive to capture: [/dev/sd?|mount|df|dmesg]" option
+	read -p "Please specify a drive to capture: [/dev/sd?|mount|df|dmesg|ls /dev]" option
 
 	if [[ $option == "mount" ]] ; then
 		mount
@@ -27,6 +27,9 @@ choose_drive_to_capture () {
 		return
 	elif [[ $option == "dmesg" ]] ; then
 		dmesg | less
+		return
+	elif [[ $option == "ls /dev" ]] ; then
+		ls /dev
 		return
 	else
 		drive=$option
