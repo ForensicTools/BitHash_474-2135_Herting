@@ -67,6 +67,21 @@ dep_check
 drive='/dev/null'
 while [[ $drive == '/dev/null' ]] ; do
 	choose_drive_to_capture
+	if [[ ! -b $drive && $drive != '/dev/null' ]] ; then
+		if [[ -f $drive ]] ; then
+			echo -e "${RED}File $drive is not a block special device."
+			echo -e "This might have unintended effects.${NC}"
+			read -p "Do you wish to continue? [y|N] " option
+			if [[ ! ( $option == "y" ||
+			          $option == "Y" ||
+			          $option == "yes" ) ]] ; then
+				drive='/dev/null'
+			fi
+		else
+			echo -e "${RED}File $drive does not exist.${NC}"
+			drive='/dev/null'
+		fi
+	fi
 done
 
 
