@@ -37,10 +37,6 @@ choose_drive_to_capture () {
 }
 
 
-unmount_drive () {
-
-}
-
 
 
 
