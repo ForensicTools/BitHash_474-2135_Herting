@@ -134,7 +134,7 @@ while [[ $workspace == "" ]] ; do
 	read -p "Enter a directory to act as a workspace: (default- pwd) " option
 
 	if [[ $option == "" ]] ; then
-		$option == `pwd`
+		option=`pwd`
 	fi
 		
 
