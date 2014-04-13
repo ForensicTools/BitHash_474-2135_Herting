@@ -62,4 +62,6 @@ dep_check () {
 
 dep_check
 
+echo choose_drive_to_capture
+
 
