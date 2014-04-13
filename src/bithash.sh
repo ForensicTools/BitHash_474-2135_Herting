@@ -141,7 +141,7 @@ while [[ $workspace == "" ]] ; do
 	if [[ -d $option ]] ; then
 		if [[ ! ( -x $option &&
 		          -w $option &&
-		          -r $option )) ]] ; then
+		          -r $option ) ]] ; then
 			echo -e "${RED}You do not have full permissions in the directory"
 			echo -e "$option. Please choose a directory where you have"
 			echo -e "full permissions.${NC}"
