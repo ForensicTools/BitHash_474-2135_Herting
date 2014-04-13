@@ -55,7 +55,7 @@ choose_drive_to_capture () {
 		dmesg | less
 		return
 	elif [[ $option == "ls /dev" ]] ; then
-		ls /dev
+		ls --color /dev
 		return
 	else
 		drive=$option
