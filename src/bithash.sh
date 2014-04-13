@@ -12,12 +12,25 @@ NC='\e[0m'
 YELLOW='\e[1;33m'
 
 
-DEPENDENCIES='cat sed grep ctorrent mktorrent'
+DEPENDENCIES='cat sed grep ctorrent mktorrent mount df'
 
 
 
 choose_drive_to_capture () {
-	read -p "Please specify a drive to capture: [/dev/sd?|mount|df]"
+	read -p "Please specify a drive to capture: [/dev/sd?|mount|df|dmesg]" option
+
+	if [[ $option == "mount" ]] ; then
+		mount
+		return choose_drive_to_capture
+	elif [[ $option == "df" ]] ; then
+		mount
+		return choose_drive_to_capture
+	elif [[ $option == "dmesg" ]] ; then
+		dmesg | less
+		return choose_drive_to_capture
+	else
+		return $option
+	fi
 }
 
 
