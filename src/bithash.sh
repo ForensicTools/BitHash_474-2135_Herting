@@ -181,6 +181,7 @@ choose_part_aware () {
 
 
 output_options () {
+	echo
 	echo -e "Current options are:"
 	echo -e "\t1. Drive\t${CYAN}${drive}${NC}"
 	echo -e "\t2. Workspace\t${CYAN}${workspace}${NC}"
