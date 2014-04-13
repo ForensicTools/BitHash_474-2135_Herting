@@ -37,6 +37,8 @@ YELLOW='\e[1;33m'
 
 DEPENDENCIES='cat sed grep ctorrent mktorrent mount df sudo umount read'
 
+workspace=""
+drive='/dev/null'
 
 
 choose_drive_to_capture () {
@@ -85,73 +87,110 @@ dep_check () {
 }
 
 
-dep_check
-drive='/dev/null'
-while [[ $drive == '/dev/null' ]] ; do
-	choose_drive_to_capture
-	if [[ ! -b $drive && $drive != '/dev/null' ]] ; then
-		if [[ -f $drive ]] ; then
-			echo -e "${RED}File $drive is not a block special device."
-			echo -e "This might have unintended effects.${NC}"
-			read -p "Do you wish to continue? [y|N] " option
-			if [[ ! ( $option == "y" ||
-			          $option == "Y" ||
-			          $option == "yes" ) ]] ; then
+
+disk_choose () {
+	while [[ $drive == '/dev/null' ]] ; do
+		choose_drive_to_capture
+		if [[ ! -b $drive && $drive != '/dev/null' ]] ; then
+			if [[ -f $drive ]] ; then
+				echo -e "${RED}File $drive is not a block special device."
+				echo -e "This might have unintended effects.${NC}"
+				read -p "Do you wish to continue? [y|N] " option
+				if [[ ! ( $option == "y" ||
+				          $option == "Y" ||
+				          $option == "yes" ) ]] ; then
+					drive='/dev/null'
+				fi
+			else
+				echo -e "${RED}File $drive does not exist.${NC}"
 				drive='/dev/null'
 			fi
-		else
-			echo -e "${RED}File $drive does not exist.${NC}"
-			drive='/dev/null'
 		fi
-	fi
-done
+	done
 
-if mount | grep $drive &> /dev/null ; then
-	echo -e "${RED}$drive is currently mounted."
-	echo -e "This might have uninteneded effects.${NC}"
-	read -p "Would you like to unmount the drive? [Y|n] " option
-	if [[ ! ( $option == "n" ||
-	          $option == "N" ||
-	          $option == "no" ) ]] ; then
 
-		sudo umount $drive
-
-		if mount | grep $drive &> /dev/null ; then
-			echo -e "${RED}$drive is still mounted. Unmount attempt failed."
-			echo -e "Exiting...${NC}"
-			exit 1
-		else
-			echo -e "${GREEN}$drive was unmounted${NC}"
+	if mount | grep $drive &> /dev/null ; then
+		echo -e "${RED}$drive is currently mounted."
+		echo -e "This might have uninteneded effects.${NC}"
+		read -p "Would you like to unmount the drive? [Y|n] " option
+		if [[ ! ( $option == "n" ||
+		          $option == "N" ||
+		          $option == "no" ) ]] ; then
+	
+			sudo umount $drive
+	
+			if mount | grep $drive &> /dev/null ; then
+				echo -e "${RED}$drive is still mounted. Unmount attempt failed."
+				echo -e "Exiting...${NC}"
+				exit 1
+			else
+				echo -e "${GREEN}$drive was unmounted${NC}"
+			fi
 		fi
+	else
+		echo -e "${GREEN}$drive is not mounted ${NC}"
 	fi
-else
-	echo -e "${GREEN}$drive is not mounted ${NC}"
-fi
+}
 
 
-workspace=""
-while [[ $workspace == "" ]] ; do
-	read -p "Enter a directory to act as a workspace: (default- pwd) " option
-
-	if [[ $option == "" ]] ; then
-		option=`pwd`
-	fi
-		
-
-	if [[ -d $option ]] ; then
-		if [[ ! ( -x $option &&
-		          -w $option &&
-		          -r $option ) ]] ; then
-			echo -e "${RED}You do not have full permissions in the directory"
-			echo -e "$option. Please choose a directory where you have"
-			echo -e "full permissions.${NC}"
-
-			workspace=""
-		else
-			workspace=$option
+ws_choose () {
+	while [[ $workspace == "" ]] ; do
+		read -p "Enter a directory to act as a workspace: (default- pwd) " option
+	
+		if [[ $option == "" ]] ; then
+			option=`pwd`
 		fi
-	fi
-done
+			
+	
+		if [[ -d $option ]] ; then
+			if [[ ! ( -x $option &&
+			          -w $option &&
+			          -r $option ) ]] ; then
+				echo -e "${RED}You do not have full permissions in the directory"
+				echo -e "$option. Please choose a directory where you have"
+				echo -e "full permissions.${NC}"
+	
+				workspace=""
+			else
+				workspace=$option
+			fi
+		fi
+	done
+}
 
+output_options () {
+	echo -e "Current options are:"
+	echo -e "\t1. Drive\t${CYAN}${drive}${NC}"
+	echo -e "\t2. Workspace\t${CYAN}${workspace}${NC}"
+	echo
+	read -p "Would you like to edit to edit any of the above? [1-2|N] " option
+
+	if [[ $option	== '1' ]] ; then
+		drive='/dev/null'
+		return 1
+	elif [[ $option == '2' ]] ; then
+		workspace=''
+		return 1
+	else
+		return
+	fi
+}
+
+
+
+make_selections () {
+	while ! output_options ; do 
+		disk_choose
+		ws_choose
+	done
+}
+	
+
+main () {
+	dep_check
+	make_selections
+}
+
+main
 
 
