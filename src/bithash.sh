@@ -227,13 +227,66 @@ make_selections () {
 		output_options
 	done
 }
+
+
+generate_ws_structure () {
+	touch "$workspace/part_table.col"
+	touch "$workspace/capture.info"
+	touch "$workspace/fdisk.out"
+	mkdir -p "$workspace/images"
+	mkdir -p "$workspace/torrent"
+}
+
+
+capture_no_aware () {
+	out_image="$workspace/images/disk.dd"
+	sudo dd if="$drive" of="$out_image"
+}
+
+generate_part_table () {
+
+}
+
+generate_capture_info () {
+	fdisk_file="$workspace/fdisk.out"
+	info_file="$workspace/capture.info"
 	
+	sudo fdisk -l "$drive" > $fdisk_file
+
+	disk=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\1/gp'`
+	hr_size=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\2/gp'`
+	hr_unit=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\3/gp'`
+	full_bytes=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\4/gp'`
+	full_sectors=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\5/gp'`
+
+	hr_time="date"
+	unix_time="date +%s"
+
+	echo "Start_Time:$unix_time" >> $info_file
+	echo "Start_HR_Time:$hr_time" >> $info_file
+	echo "User_Drive:$drive" >> $info_file
+	echo "User_Workspace:$workspace" >> $info_file
+	echo "User_Part_Aware:$part_aware" >> $info_file
+	echo "Fdisk_Disk:$disk" >> $info_file
+	echo "Fdisk_HR_Size:$hr_size" >> $info_file
+	echo "Fdisk_HR_Unit:$hr_unit" >> $info_file
+	echo "Fdisk_Full_Bytes:$full_bytes" >> $info_file
+	echo "Fdisk_Full_Sectors:$full_sectors" >> $info_file
+}
+	
+	
+	
+
+
 
 main () {
 	dep_check
 	make_selections
+	generate_ws_structure
 }
 
-main
+
+
+
 
 
