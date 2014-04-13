@@ -179,7 +179,7 @@ output_options () {
 
 check_valid () {
 	if [[ ( $workspace == '' ||
-	        $drive == '/dev/null )' ]] ; then
+	        $drive == '/dev/null' ) ]] ; then
 		return 1
 	else
 		return 0
