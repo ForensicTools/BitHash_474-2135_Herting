@@ -21,15 +21,15 @@ choose_drive_to_capture () {
 
 	if [[ $option == "mount" ]] ; then
 		mount
-		return choose_drive_to_capture
+		return
 	elif [[ $option == "df" ]] ; then
-		mount
-		return choose_drive_to_capture
+		df
+		return
 	elif [[ $option == "dmesg" ]] ; then
 		dmesg | less
-		return choose_drive_to_capture
+		return
 	else
-		return $option
+		drive=$option
 	fi
 }
 
@@ -61,7 +61,11 @@ dep_check () {
 
 
 dep_check
+drive='/dev/null'
+while [[ $drive == '/dev/null' ]] ; do
+	choose_drive_to_capture
+done
 
-echo `choose_drive_to_capture`
+
 
 
