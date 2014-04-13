@@ -39,6 +39,7 @@ DEPENDENCIES='cat sed grep ctorrent mktorrent mount df sudo umount read'
 
 workspace=""
 drive='/dev/null'
+part_aware=""
 
 
 choose_drive_to_capture () {
@@ -158,18 +159,41 @@ ws_choose () {
 	done
 }
 
+choose_part_aware () {
+	while [[ $part_aware == "" ]] ; do
+		echo -e "${CYAN}BitHash can be partition aware, meaning that it can"
+		echo -e "split up the drive based on partition bounderys and each"
+		echo -e "will be put in a seperate dd based image file.${NC}"
+		read -p "Would you like BitHash to be partition aware? [y|N] " option
+
+		if [[ ( $option == "y" ||
+		        $option == "Y" ||
+		        $option == "yes" ) ]] ; then
+			part_aware="Yes"
+		else
+			part_aware="No"
+		fi
+	done
+}
+
+
+
 output_options () {
 	echo -e "Current options are:"
 	echo -e "\t1. Drive\t${CYAN}${drive}${NC}"
 	echo -e "\t2. Workspace\t${CYAN}${workspace}${NC}"
+	echo -e "\t3. Part Aware\t${CYAN}${part_aware}${NC}"
 	echo
-	read -p "Would you like to edit to edit any of the above? [1-2|N] " option
+	read -p "Would you like to edit to edit any of the above? [1-3|N] " option
 
 	if [[ $option	== '1' ]] ; then
 		drive='/dev/null'
 		return 1
 	elif [[ $option == '2' ]] ; then
 		workspace=''
+		return 1
+	elif [[ $option == '3' ]] ; then
+		part_aware=''
 		return 1
 	else
 		return
@@ -179,7 +203,8 @@ output_options () {
 
 check_valid () {
 	if [[ ( $workspace == '' ||
-	        $drive == '/dev/null' ) ]] ; then
+	        $drive == '/dev/null' ||
+	        $part_aware == '' ) ]] ; then
 		return 1
 	else
 		return 0
@@ -192,6 +217,7 @@ make_selections () {
 	while ! check_valid ; do 
 		disk_choose
 		ws_choose
+		choose_part_aware
 
 		output_options
 	done
