@@ -243,9 +243,9 @@ capture_no_aware () {
 	sudo dd if="$drive" of="$out_image"
 }
 
-generate_part_table () {
+#generate_part_table () {
 
-}
+#}
 
 generate_capture_info () {
 	fdisk_file="$workspace/fdisk.out"
@@ -259,8 +259,10 @@ generate_capture_info () {
 	full_bytes=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\4/gp'`
 	full_sectors=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\5/gp'`
 
-	hr_time="date"
-	unix_time="date +%s"
+	unit_size=`cat "$fdisk_file" | sed -n 's/^Units\s\+=.\+\?=\s\+\([0-9]\+\)\s\+bytes.*$/\1/gp'`
+
+	hr_time=`date`
+	unix_time=`date +%s`
 
 	echo "Start_Time:$unix_time" >> $info_file
 	echo "Start_HR_Time:$hr_time" >> $info_file
@@ -272,6 +274,7 @@ generate_capture_info () {
 	echo "Fdisk_HR_Unit:$hr_unit" >> $info_file
 	echo "Fdisk_Full_Bytes:$full_bytes" >> $info_file
 	echo "Fdisk_Full_Sectors:$full_sectors" >> $info_file
+	echo "Fdisk_Unit_Size:$unit_size" >> $info_file
 }
 	
 	
@@ -283,10 +286,11 @@ main () {
 	dep_check
 	make_selections
 	generate_ws_structure
+	generate_capture_info
 }
 
 
-
+main
 
 
 
