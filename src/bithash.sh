@@ -310,8 +310,13 @@ generate_capture_info () {
 
 	unit_size=`cat "$fdisk_file" | sed -n 's/^Units\s\+=.\+\?=\s\+\([0-9]\+\)\s\+bytes.*$/\1/gp'`
 
+	echo -e -n "Hashing ${CYAN}${disk}${NC} using ${CYAN}SHA256${NC}... "
 	drive_sha=`sudo cat "${disk}" | sha256sum | cut -d' ' -f1`
+	echo -e "[${GREEN}DONE${NC}]"
+
+	echo -e -n "Hashing ${CYAN}${disk}${NC} using ${CYAN}SHA256${NC}... "
 	drive_md5=`sudo cat "${disk}" | md5sum | cut -d' ' -f1`
+	echo -e "[${GREEN}DONE${NC}]"
 
 	hr_time=`date`
 	unix_time=`date +%s`
