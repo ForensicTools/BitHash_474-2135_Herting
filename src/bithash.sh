@@ -319,7 +319,7 @@ capture_parts () {
 	max_sectors=`cat $info_file | sed -n 's|^Fdisk_Full_Sectors:\([0-9]\+\)\+$|\1|p'`
 
 	current_skip='0'
-	index='0'
+	index=`printf "%04d" '0'`
 
 	for line in `cat $part_table` ; do 
 		line_start=`echo $line | cut -d: -f3`
@@ -335,7 +335,7 @@ capture_parts () {
 
 			echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" | tee -a $image_table
 			current_skip=$line_start
-			index=$(( $index + 1 ))
+			index=`printf "%04d" $(( $index + 1 ))`
 		fi
 
 		dd_count=$(( $line_end - $current_skip ))
@@ -347,7 +347,7 @@ capture_parts () {
 
 		echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" | tee -a $image_table
 		current_skip=$line_end
-		index=$(( $index + 1 ))
+			index=`printf "%04d" $(( $index + 1 ))`
 	done
 
 	if [[ $current_skip -lt $max_sectors ]] ; then
@@ -360,8 +360,22 @@ capture_parts () {
 
 		echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" | tee -a $image_table
 		current_skip=$line_start
-		index=$(( $index + 1 ))
+			index=`printf "%04d" $(( $index + 1 ))`
 	fi
+
+	full_hash=`cat "${workspace}/images/*.dd" | sha256sum`
+}
+
+
+capture_full () {
+	part_table="$workspace/part_table.col"
+	info_file="$workspace/capture.info"
+	image_table="$workspace/image_table.col"
+	
+	unit_size=`cat $info_file | sed -n 's|^Fdisk_Unit_Size:\([0-9]\+\)\+$|\1|p'`
+	max_sectors=`cat $info_file | sed -n 's|^Fdisk_Full_Sectors:\([0-9]\+\)\+$|\1|p'`
+
+	sudo dd if="${disk}" of="${workspace}/images/full.dd"
 }
 
 		
@@ -376,6 +390,8 @@ main () {
 	generate_part_table
 	if [[ $part_aware == "Yes" ]] ; then
 		capture_parts
+	else
+		capture_full
 	fi
 }
 
