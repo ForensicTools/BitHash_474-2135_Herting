@@ -299,6 +299,7 @@ main () {
 	make_selections
 	generate_ws_structure
 	generate_capture_info
+	generate_part_table
 }
 
 
