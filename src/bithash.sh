@@ -413,6 +413,16 @@ capture_full () {
 	sudo dd if="${disk}" of="${workspace}/images/full.dd"
 }
 
+generate_torrents () {
+	for file in `ls -1 $workspace/images/*.dd` ; do
+		mktorrent -p \
+		          -a $announce \
+		          -o $workspace/torrents/${file}.torrent \
+		          $workspace/images/$file &
+	done
+	wait
+}
+
 		
 
 
@@ -429,6 +439,7 @@ main () {
 		capture_full
 	fi
 	confirm_hash
+	generate_torrents
 }
 
 
