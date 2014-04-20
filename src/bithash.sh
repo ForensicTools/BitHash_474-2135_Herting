@@ -35,7 +35,7 @@ NC='\e[0m'
 YELLOW='\e[1;33m'
 
 
-DEPENDENCIES='cat sed grep ctorrent mktorrent mount df sudo umount read'
+DEPENDENCIES='cat sed grep ctorrent mktorrent mount df sudo umount read sha256sum md5sum'
 
 WORKSPACE=""
 DRIVE='/dev/null'
