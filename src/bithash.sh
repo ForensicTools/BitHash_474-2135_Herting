@@ -38,7 +38,7 @@ YELLOW='\e[1;33m'
 DEPENDENCIES='cat sed grep ctorrent mktorrent mount df sudo umount read'
 
 workspace=""
-drive='/dev/null'
+DRIVE='/dev/null'
 PARTITION_AWARE=""
 SECTOR_SIZE="512"
 ANNOUNCE=""
@@ -71,7 +71,7 @@ choose_drive_to_capture () {
 		ls --color /dev
 		return
 	else
-		drive=$option
+		DRIVE=$option
 	fi
 }
 
@@ -103,28 +103,28 @@ dep_check () {
 
 
 disk_choose () {
-	while [[ $drive == '/dev/null' ]] ; do
+	while [[ $DRIVE == '/dev/null' ]] ; do
 		choose_drive_to_capture
-		if [[ ! -b $drive && $drive != '/dev/null' ]] ; then
-			if [[ -f $drive ]] ; then
-				echo -e "${RED}File $drive is not a block special device."
+		if [[ ! -b $DRIVE && $DRIVE != '/dev/null' ]] ; then
+			if [[ -f $DRIVE ]] ; then
+				echo -e "${RED}File $DRIVE is not a block special device."
 				echo -e "This might have unintended effects.${NC}"
 				read -p "Do you wish to continue? [y|N] " option
 				if [[ ! ( $option == "y" ||
 				          $option == "Y" ||
 				          $option == "yes" ) ]] ; then
-					drive='/dev/null'
+					DRIVE='/dev/null'
 				fi
 			else
-				echo -e "${RED}File $drive does not exist.${NC}"
-				drive='/dev/null'
+				echo -e "${RED}File $DRIVE does not exist.${NC}"
+				DRIVE='/dev/null'
 			fi
 		fi
 	done
 
 
-	if mount | grep $drive &> /dev/null ; then
-		echo -e "${RED}$drive is currently mounted."
+	if mount | grep $DRIVE &> /dev/null ; then
+		echo -e "${RED}$DRIVE is currently mounted."
 		echo -e "This might have uninteneded effects.${NC}"
 		read -p "Would you like to unmount the drive? [Y|n] " option
 		if [[ ! ( $option == "n" ||
@@ -133,16 +133,16 @@ disk_choose () {
 	
 			sudo umount $drive
 	
-			if mount | grep $drive &> /dev/null ; then
-				echo -e "${RED}$drive is still mounted. Unmount attempt failed."
+			if mount | grep $DRIVE &> /dev/null ; then
+				echo -e "${RED}$DRIVE is still mounted. Unmount attempt failed."
 				echo -e "Exiting...${NC}"
 				exit 1
 			else
-				echo -e "${GREEN}$drive was unmounted${NC}"
+				echo -e "${GREEN}$DRIVE was unmounted${NC}"
 			fi
 		fi
 	else
-		echo -e "${GREEN}$drive is not mounted ${NC}"
+		echo -e "${GREEN}$DRIVE is not mounted ${NC}"
 	fi
 }
 
@@ -227,7 +227,7 @@ output_options () {
 	read -p "Would you like to edit to edit any of the above? [1-5|N] " option
 
 	if [[ $option	== '1' ]] ; then
-		drive='/dev/null'
+		DRIVE='/dev/null'
 		return 1
 	elif [[ $option == '2' ]] ; then
 		workspace=''
@@ -249,7 +249,7 @@ output_options () {
 
 check_valid () {
 	if [[ ( $workspace == '' ||
-	        $drive == '/dev/null' ||
+	        $DRIVE == '/dev/null' ||
 	        $PARTITION_AWARE == '' ||
 	        $SECTOR_SIZE == '' ||
 	        $ANNOUNCE == "" ) ]] ; then
@@ -286,7 +286,7 @@ generate_ws_structure () {
 
 capture_no_aware () {
 	out_image="$workspace/images/disk.dd"
-	sudo dd if="$drive" of="$out_image"
+	sudo dd if="$DRIVE  of="$out_image"
 }
 
 generate_part_table () {
@@ -300,7 +300,7 @@ generate_capture_info () {
 	fdisk_file="$workspace/fdisk.out"
 	info_file="$workspace/capture.info"
 	
-	sudo fdisk -l "$drive" > $fdisk_file
+	sudo fdisk -l "$DRIVE  > $fdisk_file
 
 	disk=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\1/gp'`
 	hr_size=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\2/gp'`
@@ -318,7 +318,7 @@ generate_capture_info () {
 
 	echo "Start_Time:$unix_time" >> $info_file
 	echo "Start_HR_Time:$hr_time" >> $info_file
-	echo "User_Drive:$drive" >> $info_file
+	echo "User_Drive:$DRIVE  >> $info_file
 	echo "User_Workspace:$workspace" >> $info_file
 	echo "User_Part_Aware:$PARTITION_AWARE" >> $info_file
 	echo "Fdisk_Disk:$disk" >> $info_file
