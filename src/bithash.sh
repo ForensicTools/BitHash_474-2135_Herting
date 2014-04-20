@@ -41,6 +41,7 @@ workspace=""
 drive='/dev/null'
 part_aware=""
 SECTOR_SIZE="512"
+ANNOUNCE=""
 
 if [[ $1 == "-c" ]] ; then
 	if [[ -f $2 ]] ; then
@@ -202,6 +203,14 @@ choose_sector_size () {
 	done
 }
 
+choose_announce () {
+	while [[ $ANNOUNCE == "" ]] ; do
+		read -p "Enter a tracker announce URL: " option
+		
+		SECTOR_SIZE=$option
+	done
+}
+
 
 
 output_options () {
@@ -211,8 +220,9 @@ output_options () {
 	echo -e "\t2. Workspace\t${CYAN}${workspace}${NC}"
 	echo -e "\t3. Part Aware\t${CYAN}${part_aware}${NC}"
 	echo -e "\t4. Sector Size\t${CYAN}${SECTOR_SIZE}${NC}"
+	echo -e "\t5. Announce URL\t${CYAN}${ANNOUNCE}${NC}"
 	echo
-	read -p "Would you like to edit to edit any of the above? [1-4|N] " option
+	read -p "Would you like to edit to edit any of the above? [1-5|N] " option
 
 	if [[ $option	== '1' ]] ; then
 		drive='/dev/null'
@@ -226,6 +236,9 @@ output_options () {
 	elif [[ $option == '4' ]] ; then
 		SECTOR_SIZE=""
 		return 1
+	elif [[ $option == '5' ]] ; then
+		ANNOUNCE=""
+		return 1
 	else
 		return
 	fi
@@ -236,7 +249,8 @@ check_valid () {
 	if [[ ( $workspace == '' ||
 	        $drive == '/dev/null' ||
 	        $part_aware == '' ||
-	        $SECTOR_SIZE == '' ) ]] ; then
+	        $SECTOR_SIZE == '' ||
+	        $ANNOUNCE == "" ) ]] ; then
 		return 1
 	else
 		return 0
@@ -251,6 +265,7 @@ make_selections () {
 		ws_choose
 		choose_part_aware
 		choose_sector_size
+		choose_announce
 
 		output_options
 	done
