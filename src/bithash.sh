@@ -286,7 +286,7 @@ generate_ws_structure () {
 
 capture_no_aware () {
 	out_image="$WORKSPACE/images/disk.dd"
-	sudo dd if="$DRIVE  of="$out_image"
+	sudo dd if="$DRIVE" of="$out_image"
 }
 
 generate_part_table () {
@@ -300,7 +300,7 @@ generate_capture_info () {
 	fdisk_file="$WORKSPACE/fdisk.out"
 	info_file="$WORKSPACE/capture.info"
 	
-	sudo fdisk -l "$DRIVE  > $fdisk_file
+	sudo fdisk -l "$DRIVE"  > $fdisk_file
 
 	disk=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\1/gp'`
 	hr_size=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\2/gp'`
@@ -318,7 +318,7 @@ generate_capture_info () {
 
 	echo "Start_Time:$unix_time" >> $info_file
 	echo "Start_HR_Time:$hr_time" >> $info_file
-	echo "User_Drive:$DRIVE  >> $info_file
+	echo "User_Drive:$DRIVE"  >> $info_file
 	echo "User_Workspace:$WORKSPACE" >> $info_file
 	echo "User_Part_Aware:$PARTITION_AWARE" >> $info_file
 	echo "Fdisk_Disk:$disk" >> $info_file
@@ -404,16 +404,6 @@ confirm_hash () {
 }
 
 
-capture_full () {
-	part_table="$WORKSPACE/part_table.col"
-	info_file="$WORKSPACE/capture.info"
-	image_table="$WORKSPACE/image_table.col"
-	
-	unit_size=`cat $info_file | sed -n 's|^Fdisk_Unit_Size:\([0-9]\+\)\+$|\1|p'`
-	max_sectors=`cat $info_file | sed -n 's|^Fdisk_Full_Sectors:\([0-9]\+\)\+$|\1|p'`
-
-	sudo dd if="${disk}" of="${WORKSPACE}/images/full.dd"
-}
 
 generate_torrents () {
 	for file in `ls -1 $WORKSPACE/images/*.dd` ; do
@@ -444,7 +434,7 @@ main () {
 	if [[ $PARTITION_AWARE == "Yes" ]] ; then
 		capture_parts
 	else
-		capture_full
+		capture_no_aware
 	fi
 	confirm_hash
 	generate_torrents
