@@ -314,15 +314,17 @@ capture_parts () {
 	info_file="$workspace/capture.info"
 	
 	unit_size=`cat $info_file | sed -n 's|^Fdisk_Unit_Size:\([0-9]\)\+$|\1|p'`
-	max_sectors
+	max_sectors=`cat $info_file | sed -n 's|^Fdisk_Full_Sectors:\([0-9]\)\+$|\1|p'`
 
 	cat $part_table | while read line ; do
 		dd_skip=`echo $line | cut -d: -f3`
 		end=`echo $line | cut -d: -f4`
+
+		dd_count=$(( $end - $dd_skip ))
+
 	done
 }
 
-		
 		
 
 
