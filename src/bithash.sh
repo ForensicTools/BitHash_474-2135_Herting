@@ -416,7 +416,7 @@ capture_full () {
 generate_torrents () {
 	for file in `ls -1 $workspace/images/*.dd` ; do
 		mktorrent -p \
-		          -t $THREADS
+		          -t $THREADS \
 		          -a $ANNOUNCE \
 		          $workspace/images/$file &
 	done
