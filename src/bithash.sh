@@ -290,7 +290,21 @@ generate_capture_info () {
 }
 	
 	
+capture_parts () {
+	part_table="$workspace/part_table.col"
+	info_file="$workspace/capture.info"
 	
+	unit_size=`cat $info_file | sed -n 's|^Fdisk_Unit_Size:\([0-9]\)\+$|\1|p'`
+	max_sectors
+
+	cat $part_table | while read line ; do
+		dd_skip=`echo $line | cut -d: -f3`
+		end=`echo $line | cut -d: -f4`
+	done
+}
+
+		
+		
 
 
 
@@ -300,6 +314,9 @@ main () {
 	generate_ws_structure
 	generate_capture_info
 	generate_part_table
+	if [[ $part_aware == "Yes" ]] ; then
+		capture_parts
+	fi
 }
 
 
