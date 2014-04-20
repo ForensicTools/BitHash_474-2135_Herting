@@ -275,6 +275,7 @@ make_selections () {
 
 generate_ws_structure () {
 	mkdir -p "$workspace/images"
+	rm -rf $workspace/images/*
 	echo -n > "$workspace/part_table.col"
 	echo -n > "$workspace/capture.info"
 	echo -n > "$workspace/fdisk.out"
@@ -415,10 +416,7 @@ capture_full () {
 
 generate_torrents () {
 	for file in `ls -1 $workspace/images/*.dd` ; do
-		mktorrent -p \
-		          -t $THREADS \
-		          -a $ANNOUNCE \
-		          $workspace/images/$file &
+		ctorrent -t -u $ANNOUNCE -s ${file}.torrent -p $file &
 	done
 	wait
 }
@@ -444,6 +442,5 @@ main () {
 
 
 main
-
 
 
