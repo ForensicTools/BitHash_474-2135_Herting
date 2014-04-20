@@ -349,38 +349,47 @@ capture_parts () {
 
 		if [[ $current_skip -lt $line_start ]]; then
 			dd_count=$(( $line_start - $current_skip ))
+
+			echo -e -n "Captureing:\n\tDisk:\t${CYAN}${disk}${NC}\n\tSection:\t${CYAN}${index}${NC}\n\tStarting at:\t${CYAN}${current_skip}${NC}\n\tCount:\t${CYAN}${dd_count}${NC}... "
+			echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" >> $image_table
+
 			sudo dd if="$disk" \
 			   of="${WORKSPACE}/images/${index}.dd" \
 			   bs="${unit_size}" \
 			   count="${dd_count}" \
-			   skip="${current_skip}"
+			   skip="${current_skip}" > /dev/null
 
-			echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" | tee -a $image_table
+			echo -e "[${GREEN}DONE${NC}]"
+
 			current_skip=$line_start
 			index=`printf "%04d" $(( $index + 1 ))`
 		fi
 
 		dd_count=$(( $line_end - $current_skip ))
+			echo -e -n "Captureing:\n\tDisk:\t${CYAN}${disk}${NC}\n\tSection:\t${CYAN}${index}${NC}\n\tStarting at:\t${CYAN}${current_skip}${NC}\n\tCount:\t${CYAN}${dd_count}${NC}... "
+			echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" >> $image_table
 		sudo dd if="$disk" \
 		   of="${WORKSPACE}/images/${index}.dd" \
 		   bs="${unit_size}" \
 		   count="${dd_count}" \
-		   skip="${current_skip}"
+		   skip="${current_skip}" > /dev/null
 
-		echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" | tee -a $image_table
+		echo -e "[${GREEN}DONE${NC}]"
 		current_skip=$line_end
 			index=`printf "%04d" $(( $index + 1 ))`
 	done
 
 	if [[ $current_skip -lt $max_sectors ]] ; then
 		dd_count=$(( $max_sectors - $current_skip ))
+			echo -e -n "Captureing:\n\tDisk:\t${CYAN}${disk}${NC}\n\tSection:\t${CYAN}${index}${NC}\n\tStarting at:\t${CYAN}${current_skip}${NC}\n\tCount:\t${CYAN}${dd_count}${NC}... "
+			echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" >> $image_table
 		sudo dd if="$disk" \
 		   of="${WORKSPACE}/images/${index}.dd" \
 		   bs="${unit_size}" \
 		   count="${dd_count}" \
-		   skip="${current_skip}"
+		   skip="${current_skip}" > /dev/null
 
-		echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" | tee -a $image_table
+		echo -e "[${GREEN}DONE${NC}]"
 		current_skip=$line_start
 			index=`printf "%04d" $(( $index + 1 ))`
 	fi
@@ -415,9 +424,9 @@ generate_torrents () {
 begin_seed () {
 	for file in `ls -1 $WORKSPACE/images/*.dd.torrent` ; do
 		if [[ $CTCS == "" ]] ; then
-			ctorrent $file &
+			ctorrent $file > /dev/null &
 		else
-			ctorrent -S $CTCS $file &
+			ctorrent -S $CTCS $file > /dev/null &
 		fi
 	done
 	wait
