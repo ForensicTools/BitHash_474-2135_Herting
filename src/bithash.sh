@@ -421,9 +421,14 @@ generate_torrents () {
 	wait
 }
 
+begin_seed () {
+	for file in `ls -1 $workspace/images/*.dd.torrent` ; do
+		ctorrent $file &
+	done
+	wait
+}
+
 		
-
-
 
 main () {
 	dep_check
@@ -438,6 +443,7 @@ main () {
 	fi
 	confirm_hash
 	generate_torrents
+	begin_seed
 }
 
 
