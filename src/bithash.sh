@@ -218,9 +218,9 @@ choose_announce () {
 output_options () {
 	echo
 	echo -e "Current options are:"
-	echo -e "\t1. Drive\t${CYAN}${drive}${NC}"
-	echo -e "\t2. Workspace\t${CYAN}${workspace}${NC}"
-	echo -e "\t3. Part Aware\t${CYAN}${part_aware}${NC}"
+	echo -e "\t1. Drive\t${CYAN}${DRIVE}${NC}"
+	echo -e "\t2. Workspace\t${CYAN}${WORKSPACE}${NC}"
+	echo -e "\t3. Part Aware\t${CYAN}${PARTITION_AWARE}${NC}"
 	echo -e "\t4. Sector Size\t${CYAN}${SECTOR_SIZE}${NC}"
 	echo -e "\t5. Announce URL\t${CYAN}${ANNOUNCE}${NC}"
 	echo
@@ -350,7 +350,7 @@ capture_parts () {
 		if [[ $current_skip -lt $line_start ]]; then
 			dd_count=$(( $line_start - $current_skip ))
 			sudo dd if="$disk" \
-			   of="${workspace}/images/${index}.dd" \
+			   of="${WORKSPACE}/images/${index}.dd" \
 			   bs="${unit_size}" \
 			   count="${dd_count}" \
 			   skip="${current_skip}"
@@ -362,7 +362,7 @@ capture_parts () {
 
 		dd_count=$(( $line_end - $current_skip ))
 		sudo dd if="$disk" \
-		   of="${workspace}/images/${index}.dd" \
+		   of="${WORKSPACE}/images/${index}.dd" \
 		   bs="${unit_size}" \
 		   count="${dd_count}" \
 		   skip="${current_skip}"
@@ -375,7 +375,7 @@ capture_parts () {
 	if [[ $current_skip -lt $max_sectors ]] ; then
 		dd_count=$(( $max_sectors - $current_skip ))
 		sudo dd if="$disk" \
-		   of="${workspace}/images/${index}.dd" \
+		   of="${WORKSPACE}/images/${index}.dd" \
 		   bs="${unit_size}" \
 		   count="${dd_count}" \
 		   skip="${current_skip}"
@@ -389,8 +389,8 @@ capture_parts () {
 
 confirm_hash () {
 	info_file="$WORKSPACE/capture.info"
-	image_sha=`cat ${workspace}/images/*.dd | sha256sum | cut -d' ' -f1`
-	image_md5=`cat ${workspace}/images/*.dd | md5sum | cut -d' ' -f1`
+	image_sha=`cat ${WORKSPACE}/images/*.dd | sha256sum | cut -d' ' -f1`
+	image_md5=`cat ${WORKSPACE}/images/*.dd | md5sum | cut -d' ' -f1`
 	disk_sha=`cat $info_file | sed -n 's|^SHA_Sum:\([0-9a-f]\+\)\+$|\1|p'`
 	disk_md5=`cat $info_file | sed -n 's|^MD5_Sum:\([0-9a-f]\+\)\+$|\1|p'`
 
@@ -412,7 +412,7 @@ capture_full () {
 	unit_size=`cat $info_file | sed -n 's|^Fdisk_Unit_Size:\([0-9]\+\)\+$|\1|p'`
 	max_sectors=`cat $info_file | sed -n 's|^Fdisk_Full_Sectors:\([0-9]\+\)\+$|\1|p'`
 
-	sudo dd if="${disk}" of="${workspace}/images/full.dd"
+	sudo dd if="${disk}" of="${WORKSPACE}/images/full.dd"
 }
 
 generate_torrents () {
