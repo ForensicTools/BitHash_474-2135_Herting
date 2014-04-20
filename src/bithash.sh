@@ -274,7 +274,6 @@ make_selections () {
 
 generate_ws_structure () {
 	mkdir -p "$workspace/images"
-	mkdir -p "$workspace/torrents"
 	echo -n > "$workspace/part_table.col"
 	echo -n > "$workspace/capture.info"
 	echo -n > "$workspace/fdisk.out"
@@ -417,7 +416,6 @@ generate_torrents () {
 	for file in `ls -1 $workspace/images/*.dd` ; do
 		mktorrent -p \
 		          -a $announce \
-		          -o $workspace/torrents/${file}.torrent \
 		          $workspace/images/$file &
 	done
 	wait
