@@ -43,6 +43,7 @@ part_aware=""
 SECTOR_SIZE="512"
 ANNOUNCE=""
 THREADS=`cat /proc/cpuinfo | grep "processor" | wc -l`
+CTCS=""
 
 if [[ $1 == "-c" ]] ; then
 	if [[ -f $2 ]] ; then
@@ -423,7 +424,11 @@ generate_torrents () {
 
 begin_seed () {
 	for file in `ls -1 $workspace/images/*.dd.torrent` ; do
-		ctorrent $file &
+		if [[ $CTCS == "" ]] ; then
+			ctorrent $file &
+		else
+			ctorrent -S $CTCS $file &
+		fi
 	done
 	wait
 }
