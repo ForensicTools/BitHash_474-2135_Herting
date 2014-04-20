@@ -293,6 +293,9 @@ generate_capture_info () {
 
 	unit_size=`cat "$fdisk_file" | sed -n 's/^Units\s\+=.\+\?=\s\+\([0-9]\+\)\s\+bytes.*$/\1/gp'`
 
+	drive_sha=`cat "${disk}" | sha256sum | cut -d' ' -f1`
+	drive_md5=`cat "${disk}" | md5sum | cut -d' ' -f1`
+
 	hr_time=`date`
 	unix_time=`date +%s`
 
@@ -307,6 +310,8 @@ generate_capture_info () {
 	echo "Fdisk_Full_Bytes:$full_bytes" >> $info_file
 	echo "Fdisk_Full_Sectors:$full_sectors" >> $info_file
 	echo "Fdisk_Unit_Size:$unit_size" >> $info_file
+	echo "SHA_Sum:$drive_sha" >> $info_file
+	echo "MD5_Sum:$drive_md5" >> $info_file
 }
 	
 	
@@ -363,7 +368,10 @@ capture_parts () {
 			index=`printf "%04d" $(( $index + 1 ))`
 	fi
 
-	full_hash=`cat "${workspace}/images/*.dd" | sha256sum`
+	full_hash=`cat "${workspace}/images/*.dd" | sha256sum | cut -f1`
+	drive_hash=`sudo cat ${drive} | sha256sum | cut -f1`
+	echo $full_hash
+	echo $drive_hash
 }
 
 
