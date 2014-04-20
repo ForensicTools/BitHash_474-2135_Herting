@@ -274,7 +274,7 @@ make_selections () {
 
 generate_ws_structure () {
 	mkdir -p "$workspace/images"
-	mkdir -p "$workspace/torrent"
+	mkdir -p "$workspace/torrents"
 	echo -n > "$workspace/part_table.col"
 	echo -n > "$workspace/capture.info"
 	echo -n > "$workspace/fdisk.out"
