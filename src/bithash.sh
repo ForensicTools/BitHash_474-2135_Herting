@@ -230,11 +230,11 @@ make_selections () {
 
 
 generate_ws_structure () {
-	touch "$workspace/part_table.col"
-	touch "$workspace/capture.info"
-	touch "$workspace/fdisk.out"
 	mkdir -p "$workspace/images"
 	mkdir -p "$workspace/torrent"
+	echo -n > "$workspace/part_table.col"
+	echo -n > "$workspace/capture.info"
+	echo -n > "$workspace/fdisk.out"
 }
 
 
