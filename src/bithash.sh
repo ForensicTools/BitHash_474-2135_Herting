@@ -42,6 +42,7 @@ drive='/dev/null'
 part_aware=""
 SECTOR_SIZE="512"
 ANNOUNCE=""
+THREADS=`cat /proc/cpuinfo | grep "processor" | wc -l`
 
 if [[ $1 == "-c" ]] ; then
 	if [[ -f $2 ]] ; then
@@ -415,7 +416,8 @@ capture_full () {
 generate_torrents () {
 	for file in `ls -1 $workspace/images/*.dd` ; do
 		mktorrent -p \
-		          -a $announce \
+		          -t $THREADS
+		          -a $ANNOUNCE \
 		          $workspace/images/$file &
 	done
 	wait
