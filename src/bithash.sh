@@ -243,9 +243,12 @@ capture_no_aware () {
 	sudo dd if="$drive" of="$out_image"
 }
 
-#generate_part_table () {
+generate_part_table () {
+	fdisk_file="$workspace/fdisk.out"
+	part_table="$workspace/part_table.col"
 
-#}
+	cat $fdisk_file | sed -n 's|^\(/[a-zA-Z0-9_-/]\+\)\s\+\(\*\?\)\s\+\([0-9+]\+\)\s\+\([0-9+]\+\)\s\+\([0-9+]\+\).*$|\1:\2:\3:\4:\5|gp' > $part_table
+}
 
 generate_capture_info () {
 	fdisk_file="$workspace/fdisk.out"
