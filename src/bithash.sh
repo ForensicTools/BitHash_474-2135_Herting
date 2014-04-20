@@ -39,7 +39,7 @@ DEPENDENCIES='cat sed grep ctorrent mktorrent mount df sudo umount read'
 
 workspace=""
 drive='/dev/null'
-part_aware=""
+PARTITION_AWARE=""
 SECTOR_SIZE="512"
 ANNOUNCE=""
 THREADS=`cat /proc/cpuinfo | grep "processor" | wc -l`
@@ -175,7 +175,7 @@ ws_choose () {
 }
 
 choose_part_aware () {
-	while [[ $part_aware == "" ]] ; do
+	while [[ $PARTITION_AWARE == "" ]] ; do
 		echo -e "${CYAN}BitHash can be partition aware, meaning that it can"
 		echo -e "split up the drive based on partition bounderys and each"
 		echo -e "will be put in a seperate dd based image file."
@@ -186,9 +186,9 @@ choose_part_aware () {
 		if [[ ( $option == "y" ||
 		        $option == "Y" ||
 		        $option == "yes" ) ]] ; then
-			part_aware="Yes"
+			PARTITION_AWARE="Yes"
 		else
-			part_aware="No"
+			PARTITION_AWARE="No"
 		fi
 	done
 }
@@ -233,7 +233,7 @@ output_options () {
 		workspace=''
 		return 1
 	elif [[ $option == '3' ]] ; then
-		part_aware=''
+		PARTITION_AWARE=''
 		return 1
 	elif [[ $option == '4' ]] ; then
 		SECTOR_SIZE=""
@@ -250,7 +250,7 @@ output_options () {
 check_valid () {
 	if [[ ( $workspace == '' ||
 	        $drive == '/dev/null' ||
-	        $part_aware == '' ||
+	        $PARTITION_AWARE == '' ||
 	        $SECTOR_SIZE == '' ||
 	        $ANNOUNCE == "" ) ]] ; then
 		return 1
@@ -320,7 +320,7 @@ generate_capture_info () {
 	echo "Start_HR_Time:$hr_time" >> $info_file
 	echo "User_Drive:$drive" >> $info_file
 	echo "User_Workspace:$workspace" >> $info_file
-	echo "User_Part_Aware:$part_aware" >> $info_file
+	echo "User_Part_Aware:$PARTITION_AWARE" >> $info_file
 	echo "Fdisk_Disk:$disk" >> $info_file
 	echo "Fdisk_HR_Size:$hr_size" >> $info_file
 	echo "Fdisk_HR_Unit:$hr_unit" >> $info_file
@@ -441,7 +441,7 @@ main () {
 	generate_ws_structure
 	generate_capture_info
 	generate_part_table
-	if [[ $part_aware == "Yes" ]] ; then
+	if [[ $PARTITION_AWARE == "Yes" ]] ; then
 		capture_parts
 	else
 		capture_full
