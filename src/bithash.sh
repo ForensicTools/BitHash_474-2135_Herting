@@ -263,6 +263,7 @@ generate_ws_structure () {
 	echo -n > "$workspace/part_table.col"
 	echo -n > "$workspace/capture.info"
 	echo -n > "$workspace/fdisk.out"
+	echo -n > "$workspace/image_table.col"
 }
 
 
@@ -312,17 +313,55 @@ generate_capture_info () {
 capture_parts () {
 	part_table="$workspace/part_table.col"
 	info_file="$workspace/capture.info"
+	image_table="$workspace/image_table.col"
 	
-	unit_size=`cat $info_file | sed -n 's|^Fdisk_Unit_Size:\([0-9]\)\+$|\1|p'`
-	max_sectors=`cat $info_file | sed -n 's|^Fdisk_Full_Sectors:\([0-9]\)\+$|\1|p'`
+	unit_size=`cat $info_file | sed -n 's|^Fdisk_Unit_Size:\([0-9]\+\)\+$|\1|p'`
+	max_sectors=`cat $info_file | sed -n 's|^Fdisk_Full_Sectors:\([0-9]\+\)\+$|\1|p'`
 
-	cat $part_table | while read line ; do
-		dd_skip=`echo $line | cut -d: -f3`
-		end=`echo $line | cut -d: -f4`
+	current_skip='0'
+	index='0'
 
-		dd_count=$(( $end - $dd_skip ))
+	for line in `cat $part_table` ; do 
+		line_start=`echo $line | cut -d: -f3`
+		line_end=`echo $line | cut -d: -f4`
 
+		if [[ $current_skip -lt $line_start ]]; then
+			dd_count=$(( $line_start - $current_skip ))
+			sudo dd if="$disk" \
+			   of="${workspace}/images/${index}.dd" \
+			   bs="${unit_size}" \
+			   count="${dd_count}" \
+			   skip="${current_skip}"
+
+			echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" | tee -a $image_table
+			current_skip=$line_start
+			index=$(( $index + 1 ))
+		fi
+
+		dd_count=$(( $line_end - $current_skip ))
+		sudo dd if="$disk" \
+		   of="${workspace}/images/${index}.dd" \
+		   bs="${unit_size}" \
+		   count="${dd_count}" \
+		   skip="${current_skip}"
+
+		echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" | tee -a $image_table
+		current_skip=$line_end
+		index=$(( $index + 1 ))
 	done
+
+	if [[ $current_skip -lt $max_sectors ]] ; then
+		dd_count=$(( $max_sectors - $current_skip ))
+		sudo dd if="$disk" \
+		   of="${workspace}/images/${index}.dd" \
+		   bs="${unit_size}" \
+		   count="${dd_count}" \
+		   skip="${current_skip}"
+
+		echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" | tee -a $image_table
+		current_skip=$line_start
+		index=$(( $index + 1 ))
+	fi
 }
 
 		
