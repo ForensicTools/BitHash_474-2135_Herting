@@ -209,7 +209,7 @@ choose_announce () {
 	while [[ $ANNOUNCE == "" ]] ; do
 		read -p "Enter a tracker announce URL: " option
 		
-		SECTOR_SIZE=$option
+		ANNOUNCE=$option
 	done
 }
 
