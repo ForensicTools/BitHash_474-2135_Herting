@@ -41,6 +41,15 @@ workspace=""
 drive='/dev/null'
 part_aware=""
 
+if [[ $1 == "-c" ]] ; then
+	if [[ -f $2 ]] ; then
+		source $2
+	else
+		echo "usage $0 [-c <config file>]"
+		exit 1
+	fi
+fi
+
 
 choose_drive_to_capture () {
 	read -p "Please specify a drive to capture: [/dev/sd?|mount|df|dmesg|ls /dev]" option
