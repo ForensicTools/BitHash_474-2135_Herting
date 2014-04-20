@@ -37,7 +37,7 @@ YELLOW='\e[1;33m'
 
 DEPENDENCIES='cat sed grep ctorrent mktorrent mount df sudo umount read'
 
-workspace=""
+WORKSPACE=""
 DRIVE='/dev/null'
 PARTITION_AWARE=""
 SECTOR_SIZE="512"
@@ -148,7 +148,7 @@ disk_choose () {
 
 
 ws_choose () {
-	while [[ $workspace == "" ]] ; do
+	while [[ $WORKSPACE == "" ]] ; do
 		read -p "Enter a directory to act as a workspace: (default- pwd) " option
 	
 		if [[ $option == "" ]] ; then
@@ -164,9 +164,9 @@ ws_choose () {
 				echo -e "$option. Please choose a directory where you have"
 				echo -e "full permissions.${NC}"
 	
-				workspace=""
+				WORKSPACE=""
 			else
-				workspace=$option
+				WORKSPACE=$option
 			fi
 		else
 			echo -e "${RED}Directory ${option} does not exist.${NC}"
@@ -230,7 +230,7 @@ output_options () {
 		DRIVE='/dev/null'
 		return 1
 	elif [[ $option == '2' ]] ; then
-		workspace=''
+		WORKSPACE=''
 		return 1
 	elif [[ $option == '3' ]] ; then
 		PARTITION_AWARE=''
@@ -248,7 +248,7 @@ output_options () {
 
 
 check_valid () {
-	if [[ ( $workspace == '' ||
+	if [[ ( $WORKSPACE == '' ||
 	        $DRIVE == '/dev/null' ||
 	        $PARTITION_AWARE == '' ||
 	        $SECTOR_SIZE == '' ||
@@ -275,30 +275,30 @@ make_selections () {
 
 
 generate_ws_structure () {
-	mkdir -p "$workspace/images"
-	rm -rf $workspace/images/*
-	echo -n > "$workspace/part_table.col"
-	echo -n > "$workspace/capture.info"
-	echo -n > "$workspace/fdisk.out"
-	echo -n > "$workspace/image_table.col"
+	mkdir -p "$WORKSPACE/images"
+	rm -rf $WORKSPACE/images/*
+	echo -n > "$WORKSPACE/part_table.col"
+	echo -n > "$WORKSPACE/capture.info"
+	echo -n > "$WORKSPACE/fdisk.out"
+	echo -n > "$WORKSPACE/image_table.col"
 }
 
 
 capture_no_aware () {
-	out_image="$workspace/images/disk.dd"
+	out_image="$WORKSPACE/images/disk.dd"
 	sudo dd if="$DRIVE  of="$out_image"
 }
 
 generate_part_table () {
-	fdisk_file="$workspace/fdisk.out"
-	part_table="$workspace/part_table.col"
+	fdisk_file="$WORKSPACE/fdisk.out"
+	part_table="$WORKSPACE/part_table.col"
 
 	cat $fdisk_file | sed -n 's|^\(/[a-zA-Z0-9_-/]\+\)\s\+\(\*\?\)\s\+\([0-9+]\+\)\s\+\([0-9+]\+\)\s\+\([0-9+]\+\).*$|\1:\2:\3:\4:\5|gp' > $part_table
 }
 
 generate_capture_info () {
-	fdisk_file="$workspace/fdisk.out"
-	info_file="$workspace/capture.info"
+	fdisk_file="$WORKSPACE/fdisk.out"
+	info_file="$WORKSPACE/capture.info"
 	
 	sudo fdisk -l "$DRIVE  > $fdisk_file
 
@@ -319,7 +319,7 @@ generate_capture_info () {
 	echo "Start_Time:$unix_time" >> $info_file
 	echo "Start_HR_Time:$hr_time" >> $info_file
 	echo "User_Drive:$DRIVE  >> $info_file
-	echo "User_Workspace:$workspace" >> $info_file
+	echo "User_Workspace:$WORKSPACE" >> $info_file
 	echo "User_Part_Aware:$PARTITION_AWARE" >> $info_file
 	echo "Fdisk_Disk:$disk" >> $info_file
 	echo "Fdisk_HR_Size:$hr_size" >> $info_file
@@ -333,9 +333,9 @@ generate_capture_info () {
 	
 	
 capture_parts () {
-	part_table="$workspace/part_table.col"
-	info_file="$workspace/capture.info"
-	image_table="$workspace/image_table.col"
+	part_table="$WORKSPACE/part_table.col"
+	info_file="$WORKSPACE/capture.info"
+	image_table="$WORKSPACE/image_table.col"
 	
 	unit_size=`cat $info_file | sed -n 's|^Fdisk_Unit_Size:\([0-9]\+\)\+$|\1|p'`
 	max_sectors=`cat $info_file | sed -n 's|^Fdisk_Full_Sectors:\([0-9]\+\)\+$|\1|p'`
@@ -388,7 +388,7 @@ capture_parts () {
 
 
 confirm_hash () {
-	info_file="$workspace/capture.info"
+	info_file="$WORKSPACE/capture.info"
 	image_sha=`cat ${workspace}/images/*.dd | sha256sum | cut -d' ' -f1`
 	image_md5=`cat ${workspace}/images/*.dd | md5sum | cut -d' ' -f1`
 	disk_sha=`cat $info_file | sed -n 's|^SHA_Sum:\([0-9a-f]\+\)\+$|\1|p'`
@@ -405,9 +405,9 @@ confirm_hash () {
 
 
 capture_full () {
-	part_table="$workspace/part_table.col"
-	info_file="$workspace/capture.info"
-	image_table="$workspace/image_table.col"
+	part_table="$WORKSPACE/part_table.col"
+	info_file="$WORKSPACE/capture.info"
+	image_table="$WORKSPACE/image_table.col"
 	
 	unit_size=`cat $info_file | sed -n 's|^Fdisk_Unit_Size:\([0-9]\+\)\+$|\1|p'`
 	max_sectors=`cat $info_file | sed -n 's|^Fdisk_Full_Sectors:\([0-9]\+\)\+$|\1|p'`
@@ -416,14 +416,14 @@ capture_full () {
 }
 
 generate_torrents () {
-	for file in `ls -1 $workspace/images/*.dd` ; do
+	for file in `ls -1 $WORKSPACE/images/*.dd` ; do
 		ctorrent -t -u $ANNOUNCE -s ${file}.torrent -p $file &
 	done
 	wait
 }
 
 begin_seed () {
-	for file in `ls -1 $workspace/images/*.dd.torrent` ; do
+	for file in `ls -1 $WORKSPACE/images/*.dd.torrent` ; do
 		if [[ $CTCS == "" ]] ; then
 			ctorrent $file &
 		else
