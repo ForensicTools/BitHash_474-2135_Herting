@@ -250,6 +250,7 @@ make_selections () {
 		disk_choose
 		ws_choose
 		choose_part_aware
+		choose_sector_size
 
 		output_options
 	done
