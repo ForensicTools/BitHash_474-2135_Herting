@@ -40,6 +40,7 @@ DEPENDENCIES='cat sed grep ctorrent mktorrent mount df sudo umount read'
 workspace=""
 drive='/dev/null'
 part_aware=""
+SECTOR_SIZE="512"
 
 if [[ $1 == "-c" ]] ; then
 	if [[ -f $2 ]] ; then
@@ -189,6 +190,18 @@ choose_part_aware () {
 	done
 }
 
+choose_sector_size () {
+	while [[ $SECTOR_SIZE == "" ]] ; do
+		read -p "Enter a sector size: (Default: 512) " option
+
+		if [[ $option == "" ]] ; then
+			option='512'
+		fi
+
+		SECTOR_SIZE=$option
+	done
+}
+
 
 
 output_options () {
@@ -197,8 +210,9 @@ output_options () {
 	echo -e "\t1. Drive\t${CYAN}${drive}${NC}"
 	echo -e "\t2. Workspace\t${CYAN}${workspace}${NC}"
 	echo -e "\t3. Part Aware\t${CYAN}${part_aware}${NC}"
+	echo -e "\t4. Sector Size\t${CYAN}${SECTOR_SIZE}${NC}"
 	echo
-	read -p "Would you like to edit to edit any of the above? [1-3|N] " option
+	read -p "Would you like to edit to edit any of the above? [1-4|N] " option
 
 	if [[ $option	== '1' ]] ; then
 		drive='/dev/null'
@@ -209,6 +223,9 @@ output_options () {
 	elif [[ $option == '3' ]] ; then
 		part_aware=''
 		return 1
+	elif [[ $option == '4' ]] ; then
+		SECTOR_SIZE=""
+		return 1
 	else
 		return
 	fi
@@ -218,7 +235,8 @@ output_options () {
 check_valid () {
 	if [[ ( $workspace == '' ||
 	        $drive == '/dev/null' ||
-	        $part_aware == '' ) ]] ; then
+	        $part_aware == '' ||
+	        $SECTOR_SIZE == '' ) ]] ; then
 		return 1
 	else
 		return 0
