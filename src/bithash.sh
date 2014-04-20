@@ -367,11 +367,23 @@ capture_parts () {
 		current_skip=$line_start
 			index=`printf "%04d" $(( $index + 1 ))`
 	fi
+}
 
-	full_hash=`cat "${workspace}/images/*.dd" | sha256sum | cut -f1`
-	drive_hash=`sudo cat ${drive} | sha256sum | cut -f1`
-	echo $full_hash
-	echo $drive_hash
+
+confirm_hash () {
+	info_file="$workspace/capture.info"
+	image_sha=`cat ${workspace}/images/*.dd | sha256sum | cut -d' ' -f1`
+	image_md5=`cat ${workspace}/images/*.dd | md5sum | cut -d' ' -f1`
+	disk_sha=`cat $info_file | sed -n 's|^SHA_Sum:\([0-9a-f]\+\)\+$|\1|p'`
+	disk_md5=`cat $info_file | sed -n 's|^MD5_Sum:\([0-9a-f]\+\)\+$|\1|p'`
+
+	if [[ ( $image_sha == $disk_sha ) && ( $image_md5 == $disk_md5 ) ]] ; then
+		echo -e "${GREEN}HASH PASSES${NC}"
+		return 0
+	else
+		echo -e "${RED}HASH FAILS${NC}"
+		return 1
+	fi
 }
 
 
@@ -401,6 +413,7 @@ main () {
 	else
 		capture_full
 	fi
+	confirm_hash
 }
 
 
