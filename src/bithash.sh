@@ -293,8 +293,8 @@ generate_capture_info () {
 
 	unit_size=`cat "$fdisk_file" | sed -n 's/^Units\s\+=.\+\?=\s\+\([0-9]\+\)\s\+bytes.*$/\1/gp'`
 
-	drive_sha=`cat "${disk}" | sha256sum | cut -d' ' -f1`
-	drive_md5=`cat "${disk}" | md5sum | cut -d' ' -f1`
+	drive_sha=`sudo cat "${disk}" | sha256sum | cut -d' ' -f1`
+	drive_md5=`sudo cat "${disk}" | md5sum | cut -d' ' -f1`
 
 	hr_time=`date`
 	unix_time=`date +%s`
