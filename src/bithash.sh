@@ -35,11 +35,24 @@ NC='\e[0m'
 YELLOW='\e[1;33m'
 
 
-DEPENDENCIES='cat sed grep ctorrent mktorrent mount df sudo umount read'
+DEPENDENCIES='cat sed grep ctorrent mktorrent mount df sudo umount read sha256sum md5sum'
 
-workspace=""
-drive='/dev/null'
-part_aware=""
+WORKSPACE=""
+DRIVE='/dev/null'
+PARTITION_AWARE=""
+SECTOR_SIZE="512"
+ANNOUNCE=""
+THREADS=`cat /proc/cpuinfo | grep "processor" | wc -l`
+CTCS=""
+
+if [[ $1 == "-c" ]] ; then
+	if [[ -f $2 ]] ; then
+		source $2
+	else
+		echo "usage $0 [-c <config file>]"
+		exit 1
+	fi
+fi
 
 
 choose_drive_to_capture () {
@@ -58,7 +71,7 @@ choose_drive_to_capture () {
 		ls --color /dev
 		return
 	else
-		drive=$option
+		DRIVE=$option
 	fi
 }
 
@@ -90,28 +103,28 @@ dep_check () {
 
 
 disk_choose () {
-	while [[ $drive == '/dev/null' ]] ; do
+	while [[ $DRIVE == '/dev/null' ]] ; do
 		choose_drive_to_capture
-		if [[ ! -b $drive && $drive != '/dev/null' ]] ; then
-			if [[ -f $drive ]] ; then
-				echo -e "${RED}File $drive is not a block special device."
+		if [[ ! -b $DRIVE && $DRIVE != '/dev/null' ]] ; then
+			if [[ -f $DRIVE ]] ; then
+				echo -e "${RED}File $DRIVE is not a block special device."
 				echo -e "This might have unintended effects.${NC}"
 				read -p "Do you wish to continue? [y|N] " option
 				if [[ ! ( $option == "y" ||
 				          $option == "Y" ||
 				          $option == "yes" ) ]] ; then
-					drive='/dev/null'
+					DRIVE='/dev/null'
 				fi
 			else
-				echo -e "${RED}File $drive does not exist.${NC}"
-				drive='/dev/null'
+				echo -e "${RED}File $DRIVE does not exist.${NC}"
+				DRIVE='/dev/null'
 			fi
 		fi
 	done
 
 
-	if mount | grep $drive &> /dev/null ; then
-		echo -e "${RED}$drive is currently mounted."
+	if mount | grep $DRIVE &> /dev/null ; then
+		echo -e "${RED}$DRIVE is currently mounted."
 		echo -e "This might have uninteneded effects.${NC}"
 		read -p "Would you like to unmount the drive? [Y|n] " option
 		if [[ ! ( $option == "n" ||
@@ -120,22 +133,22 @@ disk_choose () {
 	
 			sudo umount $drive
 	
-			if mount | grep $drive &> /dev/null ; then
-				echo -e "${RED}$drive is still mounted. Unmount attempt failed."
+			if mount | grep $DRIVE &> /dev/null ; then
+				echo -e "${RED}$DRIVE is still mounted. Unmount attempt failed."
 				echo -e "Exiting...${NC}"
 				exit 1
 			else
-				echo -e "${GREEN}$drive was unmounted${NC}"
+				echo -e "${GREEN}$DRIVE was unmounted${NC}"
 			fi
 		fi
 	else
-		echo -e "${GREEN}$drive is not mounted ${NC}"
+		echo -e "${GREEN}$DRIVE is not mounted ${NC}"
 	fi
 }
 
 
 ws_choose () {
-	while [[ $workspace == "" ]] ; do
+	while [[ $WORKSPACE == "" ]] ; do
 		read -p "Enter a directory to act as a workspace: (default- pwd) " option
 	
 		if [[ $option == "" ]] ; then
@@ -151,9 +164,9 @@ ws_choose () {
 				echo -e "$option. Please choose a directory where you have"
 				echo -e "full permissions.${NC}"
 	
-				workspace=""
+				WORKSPACE=""
 			else
-				workspace=$option
+				WORKSPACE=$option
 			fi
 		else
 			echo -e "${RED}Directory ${option} does not exist.${NC}"
@@ -162,7 +175,7 @@ ws_choose () {
 }
 
 choose_part_aware () {
-	while [[ $part_aware == "" ]] ; do
+	while [[ $PARTITION_AWARE == "" ]] ; do
 		echo -e "${CYAN}BitHash can be partition aware, meaning that it can"
 		echo -e "split up the drive based on partition bounderys and each"
 		echo -e "will be put in a seperate dd based image file."
@@ -173,10 +186,30 @@ choose_part_aware () {
 		if [[ ( $option == "y" ||
 		        $option == "Y" ||
 		        $option == "yes" ) ]] ; then
-			part_aware="Yes"
+			PARTITION_AWARE="Yes"
 		else
-			part_aware="No"
+			PARTITION_AWARE="No"
 		fi
+	done
+}
+
+choose_sector_size () {
+	while [[ $SECTOR_SIZE == "" ]] ; do
+		read -p "Enter a sector size: (Default: 512) " option
+
+		if [[ $option == "" ]] ; then
+			option='512'
+		fi
+
+		SECTOR_SIZE=$option
+	done
+}
+
+choose_announce () {
+	while [[ $ANNOUNCE == "" ]] ; do
+		read -p "Enter a tracker announce URL: " option
+		
+		ANNOUNCE=$option
 	done
 }
 
@@ -185,20 +218,28 @@ choose_part_aware () {
 output_options () {
 	echo
 	echo -e "Current options are:"
-	echo -e "\t1. Drive\t${CYAN}${drive}${NC}"
-	echo -e "\t2. Workspace\t${CYAN}${workspace}${NC}"
-	echo -e "\t3. Part Aware\t${CYAN}${part_aware}${NC}"
+	echo -e "\t1. Drive\t${CYAN}${DRIVE}${NC}"
+	echo -e "\t2. Workspace\t${CYAN}${WORKSPACE}${NC}"
+	echo -e "\t3. Part Aware\t${CYAN}${PARTITION_AWARE}${NC}"
+	echo -e "\t4. Sector Size\t${CYAN}${SECTOR_SIZE}${NC}"
+	echo -e "\t5. Announce URL\t${CYAN}${ANNOUNCE}${NC}"
 	echo
-	read -p "Would you like to edit to edit any of the above? [1-3|N] " option
+	read -p "Would you like to edit to edit any of the above? [1-5|N] " option
 
 	if [[ $option	== '1' ]] ; then
-		drive='/dev/null'
+		DRIVE='/dev/null'
 		return 1
 	elif [[ $option == '2' ]] ; then
-		workspace=''
+		WORKSPACE=''
 		return 1
 	elif [[ $option == '3' ]] ; then
-		part_aware=''
+		PARTITION_AWARE=''
+		return 1
+	elif [[ $option == '4' ]] ; then
+		SECTOR_SIZE=""
+		return 1
+	elif [[ $option == '5' ]] ; then
+		ANNOUNCE=""
 		return 1
 	else
 		return
@@ -207,9 +248,11 @@ output_options () {
 
 
 check_valid () {
-	if [[ ( $workspace == '' ||
-	        $drive == '/dev/null' ||
-	        $part_aware == '' ) ]] ; then
+	if [[ ( $WORKSPACE == '' ||
+	        $DRIVE == '/dev/null' ||
+	        $PARTITION_AWARE == '' ||
+	        $SECTOR_SIZE == '' ||
+	        $ANNOUNCE == "" ) ]] ; then
 		return 1
 	else
 		return 0
@@ -223,6 +266,8 @@ make_selections () {
 		disk_choose
 		ws_choose
 		choose_part_aware
+		choose_sector_size
+		choose_announce
 
 		output_options
 	done
@@ -230,28 +275,32 @@ make_selections () {
 
 
 generate_ws_structure () {
-	touch "$workspace/part_table.col"
-	touch "$workspace/capture.info"
-	touch "$workspace/fdisk.out"
-	mkdir -p "$workspace/images"
-	mkdir -p "$workspace/torrent"
+	mkdir -p "$WORKSPACE/images"
+	rm -rf $WORKSPACE/images/*
+	echo -n > "$WORKSPACE/part_table.col"
+	echo -n > "$WORKSPACE/capture.info"
+	echo -n > "$WORKSPACE/fdisk.out"
+	echo -n > "$WORKSPACE/image_table.col"
 }
 
 
 capture_no_aware () {
-	out_image="$workspace/images/disk.dd"
-	sudo dd if="$drive" of="$out_image"
+	out_image="$WORKSPACE/images/disk.dd"
+	sudo dd if="$DRIVE" of="$out_image"
 }
 
-#generate_part_table () {
+generate_part_table () {
+	fdisk_file="$WORKSPACE/fdisk.out"
+	part_table="$WORKSPACE/part_table.col"
 
-#}
+	cat $fdisk_file | sed -n 's|^\(/[a-zA-Z0-9_-/]\+\)\s\+\(\*\?\)\s\+\([0-9+]\+\)\s\+\([0-9+]\+\)\s\+\([0-9+]\+\).*$|\1:\2:\3:\4:\5|gp' > $part_table
+}
 
 generate_capture_info () {
-	fdisk_file="$workspace/fdisk.out"
-	info_file="$workspace/capture.info"
+	fdisk_file="$WORKSPACE/fdisk.out"
+	info_file="$WORKSPACE/capture.info"
 	
-	sudo fdisk -l "$drive" > $fdisk_file
+	sudo fdisk -l "$DRIVE"  > $fdisk_file
 
 	disk=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\1/gp'`
 	hr_size=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\2/gp'`
@@ -261,36 +310,152 @@ generate_capture_info () {
 
 	unit_size=`cat "$fdisk_file" | sed -n 's/^Units\s\+=.\+\?=\s\+\([0-9]\+\)\s\+bytes.*$/\1/gp'`
 
+	echo -e -n "Hashing ${CYAN}${disk}${NC} using ${CYAN}SHA256${NC}... "
+	drive_sha=`sudo cat "${disk}" | sha256sum | cut -d' ' -f1`
+	echo -e "[${GREEN}DONE${NC}]"
+
+	echo -e -n "Hashing ${CYAN}${disk}${NC} using ${CYAN}SHA256${NC}... "
+	drive_md5=`sudo cat "${disk}" | md5sum | cut -d' ' -f1`
+	echo -e "[${GREEN}DONE${NC}]"
+
 	hr_time=`date`
 	unix_time=`date +%s`
 
 	echo "Start_Time:$unix_time" >> $info_file
 	echo "Start_HR_Time:$hr_time" >> $info_file
-	echo "User_Drive:$drive" >> $info_file
-	echo "User_Workspace:$workspace" >> $info_file
-	echo "User_Part_Aware:$part_aware" >> $info_file
+	echo "User_Drive:$DRIVE"  >> $info_file
+	echo "User_Workspace:$WORKSPACE" >> $info_file
+	echo "User_Part_Aware:$PARTITION_AWARE" >> $info_file
 	echo "Fdisk_Disk:$disk" >> $info_file
 	echo "Fdisk_HR_Size:$hr_size" >> $info_file
 	echo "Fdisk_HR_Unit:$hr_unit" >> $info_file
 	echo "Fdisk_Full_Bytes:$full_bytes" >> $info_file
 	echo "Fdisk_Full_Sectors:$full_sectors" >> $info_file
 	echo "Fdisk_Unit_Size:$unit_size" >> $info_file
+	echo "SHA_Sum:$drive_sha" >> $info_file
+	echo "MD5_Sum:$drive_md5" >> $info_file
 }
 	
 	
+capture_parts () {
+	part_table="$WORKSPACE/part_table.col"
+	info_file="$WORKSPACE/capture.info"
+	image_table="$WORKSPACE/image_table.col"
 	
+	unit_size=`cat $info_file | sed -n 's|^Fdisk_Unit_Size:\([0-9]\+\)\+$|\1|p'`
+	max_sectors=`cat $info_file | sed -n 's|^Fdisk_Full_Sectors:\([0-9]\+\)\+$|\1|p'`
+
+	current_skip='0'
+	index=`printf "%04d" '0'`
+
+	for line in `cat $part_table` ; do 
+		line_start=`echo $line | cut -d: -f3`
+		line_end=`echo $line | cut -d: -f4`
+
+		if [[ $current_skip -lt $line_start ]]; then
+			dd_count=$(( $line_start - $current_skip ))
+
+			echo -e -n "Captureing:\n\tDisk:\t\t${CYAN}${disk}${NC}\n\tSection:\t${CYAN}${index}${NC}\n\tStarting at:\t${CYAN}${current_skip}${NC}\n\tCount:\t\t${CYAN}${dd_count}${NC}... "
+			echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" >> $image_table
+
+			sudo dd if="$disk" \
+			   of="${WORKSPACE}/images/${index}.dd" \
+			   bs="${unit_size}" \
+			   count="${dd_count}" \
+			   skip="${current_skip}" &> /dev/null
+
+			echo -e "[${GREEN}DONE${NC}]"
+
+			current_skip=$line_start
+			index=`printf "%04d" $(( $index + 1 ))`
+		fi
+
+		dd_count=$(( $line_end - $current_skip ))
+			echo -e -n "Captureing:\n\tDisk:\t\t${CYAN}${disk}${NC}\n\tSection:\t${CYAN}${index}${NC}\n\tStarting at:\t${CYAN}${current_skip}${NC}\n\tCount:\t\t${CYAN}${dd_count}${NC}... "
+			echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" >> $image_table
+		sudo dd if="$disk" \
+		   of="${WORKSPACE}/images/${index}.dd" \
+		   bs="${unit_size}" \
+		   count="${dd_count}" \
+		   skip="${current_skip}" &> /dev/null
+
+		echo -e "[${GREEN}DONE${NC}]"
+		current_skip=$line_end
+			index=`printf "%04d" $(( $index + 1 ))`
+	done
+
+	if [[ $current_skip -lt $max_sectors ]] ; then
+		dd_count=$(( $max_sectors - $current_skip ))
+			echo -e -n "Captureing:\n\tDisk:\t\t${CYAN}${disk}${NC}\n\tSection:\t${CYAN}${index}${NC}\n\tStarting at:\t${CYAN}${current_skip}${NC}\n\tCount:\t\t${CYAN}${dd_count}${NC}... "
+			echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" >> $image_table
+		sudo dd if="$disk" \
+		   of="${WORKSPACE}/images/${index}.dd" \
+		   bs="${unit_size}" \
+		   count="${dd_count}" \
+		   skip="${current_skip}" &> /dev/null
+
+		echo -e "[${GREEN}DONE${NC}]"
+		current_skip=$line_start
+			index=`printf "%04d" $(( $index + 1 ))`
+	fi
+}
 
 
+confirm_hash () {
+	info_file="$WORKSPACE/capture.info"
+	image_sha=`cat ${WORKSPACE}/images/*.dd | sha256sum | cut -d' ' -f1`
+	image_md5=`cat ${WORKSPACE}/images/*.dd | md5sum | cut -d' ' -f1`
+	disk_sha=`cat $info_file | sed -n 's|^SHA_Sum:\([0-9a-f]\+\)\+$|\1|p'`
+	disk_md5=`cat $info_file | sed -n 's|^MD5_Sum:\([0-9a-f]\+\)\+$|\1|p'`
+
+	if [[ ( $image_sha == $disk_sha ) && ( $image_md5 == $disk_md5 ) ]] ; then
+		echo -e "${GREEN}HASH PASSES${NC}"
+		return 0
+	else
+		echo -e "${RED}HASH FAILS${NC}"
+		return 1
+	fi
+}
+
+
+
+generate_torrents () {
+	for file in `ls -1 $WORKSPACE/images/*.dd` ; do
+		ctorrent -t -u $ANNOUNCE -s ${file}.torrent -p $file &
+	done
+	wait
+}
+
+begin_seed () {
+	for file in `ls -1 $WORKSPACE/images/*.dd.torrent` ; do
+		if [[ $CTCS == "" ]] ; then
+			ctorrent $file > /dev/null &
+		else
+			ctorrent -S $CTCS $file > /dev/null &
+		fi
+	done
+	wait
+}
+
+		
 
 main () {
 	dep_check
 	make_selections
 	generate_ws_structure
 	generate_capture_info
+	generate_part_table
+	if [[ $PARTITION_AWARE == "Yes" ]] ; then
+		capture_parts
+	else
+		capture_no_aware
+	fi
+	confirm_hash
+	generate_torrents
+	begin_seed
 }
 
 
 main
-
 
 
