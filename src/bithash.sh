@@ -374,13 +374,13 @@ capture_parts () {
 		fi
 
 		dd_count=$(( $line_end - $current_skip ))
-			echo -e -n "Captureing:\n\tDisk:\t\t${CYAN}${disk}${NC}\n\tSection:\t${CYAN}${index}${NC}\n\tStarting at:\t${CYAN}${current_skip}${NC}\n\tCount:\t\t${CYAN}${dd_count}${NC}... "
-			echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" >> $image_table
+		echo -e -n "Captureing:\n\tDisk:\t\t${CYAN}${disk}${NC}\n\tSection:\t${CYAN}${index}${NC}\n\tStarting at:\t${CYAN}${current_skip}${NC}\n\tCount:\t\t${CYAN}${dd_count}${NC}... "
+		echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" >> $image_table
+	
 		sudo dd if="$disk" \
-		   of="${WORKSPACE}/images/${index}.dd" \
 		   bs="${unit_size}" \
 		   count="${dd_count}" \
-		   skip="${current_skip}" &> /dev/null
+		   skip="${current_skip}" 2> /dev/null | ${output_handler}
 
 		echo -e "[${GREEN}DONE${NC}]"
 		current_skip=$line_end
@@ -389,13 +389,13 @@ capture_parts () {
 
 	if [[ $current_skip -lt $max_sectors ]] ; then
 		dd_count=$(( $max_sectors - $current_skip ))
-			echo -e -n "Captureing:\n\tDisk:\t\t${CYAN}${disk}${NC}\n\tSection:\t${CYAN}${index}${NC}\n\tStarting at:\t${CYAN}${current_skip}${NC}\n\tCount:\t\t${CYAN}${dd_count}${NC}... "
-			echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" >> $image_table
+		echo -e -n "Captureing:\n\tDisk:\t\t${CYAN}${disk}${NC}\n\tSection:\t${CYAN}${index}${NC}\n\tStarting at:\t${CYAN}${current_skip}${NC}\n\tCount:\t\t${CYAN}${dd_count}${NC}... "
+		echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" >> $image_table
+		
 		sudo dd if="$disk" \
-		   of="${WORKSPACE}/images/${index}.dd" \
 		   bs="${unit_size}" \
 		   count="${dd_count}" \
-		   skip="${current_skip}" &> /dev/null
+		   skip="${current_skip}" 2> /dev/null | ${output_handler}
 
 		echo -e "[${GREEN}DONE${NC}]"
 		current_skip=$line_start
