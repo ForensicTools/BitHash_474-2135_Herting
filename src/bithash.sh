@@ -338,8 +338,13 @@ generate_capture_info () {
 }
 
 output_handler () {
-	echo "cat > ${WORKSPACE}/images/${1}.dd"
+	if [[ ${COMPRESS} == "Yes" ]] ; then
+		echo "gzip > ${WORKSPACE}/images/${1}.dd.gz"
+	else
+		echo "cat > ${WORKSPACE}/images/${1}.dd"
+	fi
 }
+
 	
 	
 capture_parts () {
@@ -406,11 +411,19 @@ capture_parts () {
 	fi
 }
 
+merge_all () {
+	if [[ ${COMPRESS} == "Yes" ]] ; then
+		echo "gzip -c ${WORKSPACE}/images/*.dd.gz"
+	else
+		echo "cat ${WORKSPACE}/images/*.dd"
+	fi
+}
+
 
 confirm_hash () {
 	info_file="$WORKSPACE/capture.info"
-	image_sha=`cat ${WORKSPACE}/images/*.dd | sha256sum | cut -d' ' -f1`
-	image_md5=`cat ${WORKSPACE}/images/*.dd | md5sum | cut -d' ' -f1`
+	image_sha=`$(merge_all) | sha256sum | cut -d' ' -f1`
+	image_md5=`$(merge_all) | md5sum | cut -d' ' -f1`
 	disk_sha=`cat $info_file | sed -n 's|^SHA_Sum:\([0-9a-f]\+\)\+$|\1|p'`
 	disk_md5=`cat $info_file | sed -n 's|^MD5_Sum:\([0-9a-f]\+\)\+$|\1|p'`
 
