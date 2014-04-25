@@ -336,6 +336,10 @@ generate_capture_info () {
 	echo "SHA_Sum:$drive_sha" >> $info_file
 	echo "MD5_Sum:$drive_md5" >> $info_file
 }
+
+output_handler () {
+	echo "cat > ${WORKSPACE}/images/${1}.dd"
+}
 	
 	
 capture_parts () {
@@ -346,7 +350,6 @@ capture_parts () {
 	unit_size=`cat $info_file | sed -n 's|^Fdisk_Unit_Size:\([0-9]\+\)\+$|\1|p'`
 	max_sectors=`cat $info_file | sed -n 's|^Fdisk_Full_Sectors:\([0-9]\+\)\+$|\1|p'`
 	
-	output_handler="cat > ${WORKSPACE}/images/${index}.dd"
 
 	current_skip='0'
 	index=`printf "%04d" '0'`
@@ -364,7 +367,7 @@ capture_parts () {
 			sudo dd if="$disk" \
 			   bs="${unit_size}" \
 			   count="${dd_count}" \
-			   skip="${current_skip}" 2> /dev/null | ${output_handler}
+			   skip="${current_skip}" 2> /dev/null | `output_handler ${index}`
 
 
 			echo -e "[${GREEN}DONE${NC}]"
@@ -380,7 +383,7 @@ capture_parts () {
 		sudo dd if="$disk" \
 		   bs="${unit_size}" \
 		   count="${dd_count}" \
-		   skip="${current_skip}" 2> /dev/null | ${output_handler}
+		   skip="${current_skip}" 2> /dev/null | `output_handler ${index}`
 
 		echo -e "[${GREEN}DONE${NC}]"
 		current_skip=$line_end
@@ -395,7 +398,7 @@ capture_parts () {
 		sudo dd if="$disk" \
 		   bs="${unit_size}" \
 		   count="${dd_count}" \
-		   skip="${current_skip}" 2> /dev/null | ${output_handler}
+		   skip="${current_skip}" 2> /dev/null | `output_handler ${index}`
 
 		echo -e "[${GREEN}DONE${NC}]"
 		current_skip=$line_start
