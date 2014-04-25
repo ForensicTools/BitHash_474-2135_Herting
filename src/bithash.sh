@@ -44,6 +44,7 @@ SECTOR_SIZE="512"
 ANNOUNCE=""
 THREADS=`cat /proc/cpuinfo | grep "processor" | wc -l`
 CTCS=""
+COMPRESS=""
 
 if [[ $1 == "-c" ]] ; then
 	if [[ -f $2 ]] ; then
@@ -344,6 +345,8 @@ capture_parts () {
 	
 	unit_size=`cat $info_file | sed -n 's|^Fdisk_Unit_Size:\([0-9]\+\)\+$|\1|p'`
 	max_sectors=`cat $info_file | sed -n 's|^Fdisk_Full_Sectors:\([0-9]\+\)\+$|\1|p'`
+	
+	output_handler="cat > ${WORKSPACE}/images/${index}.dd"
 
 	current_skip='0'
 	index=`printf "%04d" '0'`
@@ -359,10 +362,10 @@ capture_parts () {
 			echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" >> $image_table
 
 			sudo dd if="$disk" \
-			   of="${WORKSPACE}/images/${index}.dd" \
 			   bs="${unit_size}" \
 			   count="${dd_count}" \
-			   skip="${current_skip}" &> /dev/null
+			   skip="${current_skip}" 2> /dev/null | ${output_handler}
+
 
 			echo -e "[${GREEN}DONE${NC}]"
 
