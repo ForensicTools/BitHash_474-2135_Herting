@@ -339,9 +339,9 @@ generate_capture_info () {
 
 output_handler () {
 	if [[ ${COMPRESS} == "Yes" ]] ; then
-		echo "gzip > ${WORKSPACE}/images/${1}.dd.gz"
+		echo "gzip"
 	else
-		echo "cat > ${WORKSPACE}/images/${1}.dd"
+		echo "cat"
 	fi
 }
 
@@ -372,7 +372,7 @@ capture_parts () {
 			sudo dd if="$disk" \
 			   bs="${unit_size}" \
 			   count="${dd_count}" \
-			   skip="${current_skip}" 2> /dev/null | `output_handler ${index}`
+			   skip="${current_skip}" 2> /dev/null | `output_handler` > ${WORKSPACE}/images/${index}.dd
 
 
 			echo -e "[${GREEN}DONE${NC}]"
@@ -388,7 +388,7 @@ capture_parts () {
 		sudo dd if="$disk" \
 		   bs="${unit_size}" \
 		   count="${dd_count}" \
-		   skip="${current_skip}" 2> /dev/null | `output_handler ${index}`
+		   skip="${current_skip}" 2> /dev/null | `output_handler` > ${WORKSPACE}/images/${index}.dd
 
 		echo -e "[${GREEN}DONE${NC}]"
 		current_skip=$line_end
@@ -403,7 +403,7 @@ capture_parts () {
 		sudo dd if="$disk" \
 		   bs="${unit_size}" \
 		   count="${dd_count}" \
-		   skip="${current_skip}" 2> /dev/null | `output_handler ${index}`
+		   skip="${current_skip}" 2> /dev/null | `output_handler` > ${WORKSPACE}/images/${index}.dd
 
 		echo -e "[${GREEN}DONE${NC}]"
 		current_skip=$line_start
