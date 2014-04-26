@@ -354,6 +354,14 @@ capture_parts () {
 	
 	unit_size=`cat $info_file | sed -n 's|^Fdisk_Unit_Size:\([0-9]\+\)\+$|\1|p'`
 	max_sectors=`cat $info_file | sed -n 's|^Fdisk_Full_Sectors:\([0-9]\+\)\+$|\1|p'`
+
+	output_handler="cat"
+	image_extension=".dd"
+
+	if [[ ${COMPRESS} == "Yes" ]] ; then
+		output_handler="gzip"
+		image_extension=".dd.gz"
+	fi
 	
 
 	current_skip='0'
@@ -372,7 +380,7 @@ capture_parts () {
 			sudo dd if="$disk" \
 			   bs="${unit_size}" \
 			   count="${dd_count}" \
-			   skip="${current_skip}" 2> /dev/null | `output_handler` > ${WORKSPACE}/images/${index}.dd
+			   skip="${current_skip}" 2> /dev/null | ${output_handler} > ${WORKSPACE}/images/${index}${image_extension}
 
 
 			echo -e "[${GREEN}DONE${NC}]"
@@ -388,7 +396,7 @@ capture_parts () {
 		sudo dd if="$disk" \
 		   bs="${unit_size}" \
 		   count="${dd_count}" \
-		   skip="${current_skip}" 2> /dev/null | `output_handler` > ${WORKSPACE}/images/${index}.dd
+		   skip="${current_skip}" 2> /dev/null | ${output_handler} > ${WORKSPACE}/images/${index}${image_extension}
 
 		echo -e "[${GREEN}DONE${NC}]"
 		current_skip=$line_end
@@ -403,7 +411,7 @@ capture_parts () {
 		sudo dd if="$disk" \
 		   bs="${unit_size}" \
 		   count="${dd_count}" \
-		   skip="${current_skip}" 2> /dev/null | `output_handler` > ${WORKSPACE}/images/${index}.dd
+		   skip="${current_skip}" 2> /dev/null | ${output_handler} > ${WORKSPACE}/images/${index}${image_extension}
 
 		echo -e "[${GREEN}DONE${NC}]"
 		current_skip=$line_start
@@ -422,8 +430,17 @@ merge_all () {
 
 confirm_hash () {
 	info_file="$WORKSPACE/capture.info"
-	image_sha=`$(merge_all) | sha256sum | cut -d' ' -f1`
-	image_md5=`$(merge_all) | md5sum | cut -d' ' -f1`
+
+	input_handler="cat"
+	image_extension=".dd"
+
+	if [[ ${COMPRESS} == "Yes" ]] ; then
+		input_handler="gzip -c"
+		image_extension=".dd.gz"
+	fi
+	
+	image_sha=`${input_handler} ${WORKSPACE}/images/*${image_extension} | sha256sum | cut -d' ' -f1`
+	image_md5=`${input_handler} ${WORKSPACE}/images/*${image_extension} | md5sum | cut -d' ' -f1`
 	disk_sha=`cat $info_file | sed -n 's|^SHA_Sum:\([0-9a-f]\+\)\+$|\1|p'`
 	disk_md5=`cat $info_file | sed -n 's|^MD5_Sum:\([0-9a-f]\+\)\+$|\1|p'`
 
