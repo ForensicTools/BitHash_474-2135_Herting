@@ -337,14 +337,6 @@ generate_capture_info () {
 	echo "MD5_Sum:$drive_md5" >> $info_file
 }
 
-output_handler () {
-	if [[ ${COMPRESS} == "Yes" ]] ; then
-		echo "gzip"
-	else
-		echo "cat"
-	fi
-}
-
 	
 	
 capture_parts () {
@@ -416,14 +408,6 @@ capture_parts () {
 		echo -e "[${GREEN}DONE${NC}]"
 		current_skip=$line_start
 			index=`printf "%04d" $(( $index + 1 ))`
-	fi
-}
-
-merge_all () {
-	if [[ ${COMPRESS} == "Yes" ]] ; then
-		echo "gzip -c ${WORKSPACE}/images/*.dd.gz"
-	else
-		echo "cat ${WORKSPACE}/images/*.dd"
 	fi
 }
 
