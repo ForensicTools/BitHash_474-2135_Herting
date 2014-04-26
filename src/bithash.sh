@@ -315,7 +315,7 @@ generate_capture_info () {
 	drive_sha=`sudo cat "${disk}" | sha256sum | cut -d' ' -f1`
 	echo -e "[${GREEN}DONE${NC}]"
 
-	echo -e -n "Hashing ${CYAN}${disk}${NC} using ${CYAN}SHA256${NC}... "
+	echo -e -n "Hashing ${CYAN}${disk}${NC} using ${CYAN}MD5${NC}... "
 	drive_md5=`sudo cat "${disk}" | md5sum | cut -d' ' -f1`
 	echo -e "[${GREEN}DONE${NC}]"
 
