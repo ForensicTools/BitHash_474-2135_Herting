@@ -440,14 +440,20 @@ confirm_hash () {
 
 
 generate_torrents () {
-	for file in `ls -1 $WORKSPACE/images/*.dd` ; do
+	image_extension=".dd"
+
+	if [[ ${COMPRESS} == "Yes" ]] ; then
+		image_extension=".dd.gz"
+	fi
+
+	for file in `ls -1 $WORKSPACE/images/*${image_extension}` ; do
 		ctorrent -t -u $ANNOUNCE -s ${file}.torrent -p $file &
 	done
 	wait
 }
 
 begin_seed () {
-	for file in `ls -1 $WORKSPACE/images/*.dd.torrent` ; do
+	for file in `ls -1 $WORKSPACE/images/*.torrent` ; do
 		if [[ $CTCS == "" ]] ; then
 			ctorrent $file > /dev/null &
 		else
