@@ -419,7 +419,7 @@ confirm_hash () {
 	image_extension=".dd"
 
 	if [[ ${COMPRESS} == "Yes" ]] ; then
-		input_handler="gzip -c"
+		input_handler="zcat"
 		image_extension=".dd.gz"
 	fi
 	
