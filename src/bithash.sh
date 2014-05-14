@@ -44,6 +44,7 @@ SECTOR_SIZE="512"
 ANNOUNCE=""
 THREADS=`cat /proc/cpuinfo | grep "processor" | wc -l`
 CTCS=""
+COMPRESS=""
 
 if [[ $1 == "-c" ]] ; then
 	if [[ -f $2 ]] ; then
@@ -302,11 +303,11 @@ generate_capture_info () {
 	
 	sudo fdisk -l "$DRIVE"  > $fdisk_file
 
-	disk=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\1/gp'`
-	hr_size=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\2/gp'`
-	hr_unit=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\3/gp'`
-	full_bytes=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\4/gp'`
-	full_sectors=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\5/gp'`
+	disk=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9.]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\1/gp'`
+	hr_size=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9.]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\2/gp'`
+	hr_unit=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9.]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\3/gp'`
+	full_bytes=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9.]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\4/gp'`
+	full_sectors=`cat "$fdisk_file" | sed -n 's/^Disk \(.\+\?\):\s\+\([0-9.]\+\)\s\+\([A-Z]B\),\s\+\([0-9]\+\)\s\+bytes,\s\+\([0-9]\+\)\s\+sectors.*$/\5/gp'`
 
 	unit_size=`cat "$fdisk_file" | sed -n 's/^Units\s\+=.\+\?=\s\+\([0-9]\+\)\s\+bytes.*$/\1/gp'`
 
@@ -314,7 +315,7 @@ generate_capture_info () {
 	drive_sha=`sudo cat "${disk}" | sha256sum | cut -d' ' -f1`
 	echo -e "[${GREEN}DONE${NC}]"
 
-	echo -e -n "Hashing ${CYAN}${disk}${NC} using ${CYAN}SHA256${NC}... "
+	echo -e -n "Hashing ${CYAN}${disk}${NC} using ${CYAN}MD5${NC}... "
 	drive_md5=`sudo cat "${disk}" | md5sum | cut -d' ' -f1`
 	echo -e "[${GREEN}DONE${NC}]"
 
@@ -335,6 +336,7 @@ generate_capture_info () {
 	echo "SHA_Sum:$drive_sha" >> $info_file
 	echo "MD5_Sum:$drive_md5" >> $info_file
 }
+
 	
 	
 capture_parts () {
@@ -344,6 +346,15 @@ capture_parts () {
 	
 	unit_size=`cat $info_file | sed -n 's|^Fdisk_Unit_Size:\([0-9]\+\)\+$|\1|p'`
 	max_sectors=`cat $info_file | sed -n 's|^Fdisk_Full_Sectors:\([0-9]\+\)\+$|\1|p'`
+
+	output_handler="cat"
+	image_extension=".dd"
+
+	if [[ ${COMPRESS} == "Yes" ]] ; then
+		output_handler="gzip"
+		image_extension=".dd.gz"
+	fi
+	
 
 	current_skip='0'
 	index=`printf "%04d" '0'`
@@ -359,10 +370,10 @@ capture_parts () {
 			echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" >> $image_table
 
 			sudo dd if="$disk" \
-			   of="${WORKSPACE}/images/${index}.dd" \
 			   bs="${unit_size}" \
 			   count="${dd_count}" \
-			   skip="${current_skip}" &> /dev/null
+			   skip="${current_skip}" 2> /dev/null | ${output_handler} > ${WORKSPACE}/images/${index}${image_extension}
+
 
 			echo -e "[${GREEN}DONE${NC}]"
 
@@ -371,13 +382,13 @@ capture_parts () {
 		fi
 
 		dd_count=$(( $line_end - $current_skip ))
-			echo -e -n "Captureing:\n\tDisk:\t\t${CYAN}${disk}${NC}\n\tSection:\t${CYAN}${index}${NC}\n\tStarting at:\t${CYAN}${current_skip}${NC}\n\tCount:\t\t${CYAN}${dd_count}${NC}... "
-			echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" >> $image_table
+		echo -e -n "Captureing:\n\tDisk:\t\t${CYAN}${disk}${NC}\n\tSection:\t${CYAN}${index}${NC}\n\tStarting at:\t${CYAN}${current_skip}${NC}\n\tCount:\t\t${CYAN}${dd_count}${NC}... "
+		echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" >> $image_table
+	
 		sudo dd if="$disk" \
-		   of="${WORKSPACE}/images/${index}.dd" \
 		   bs="${unit_size}" \
 		   count="${dd_count}" \
-		   skip="${current_skip}" &> /dev/null
+		   skip="${current_skip}" 2> /dev/null | ${output_handler} > ${WORKSPACE}/images/${index}${image_extension}
 
 		echo -e "[${GREEN}DONE${NC}]"
 		current_skip=$line_end
@@ -386,13 +397,13 @@ capture_parts () {
 
 	if [[ $current_skip -lt $max_sectors ]] ; then
 		dd_count=$(( $max_sectors - $current_skip ))
-			echo -e -n "Captureing:\n\tDisk:\t\t${CYAN}${disk}${NC}\n\tSection:\t${CYAN}${index}${NC}\n\tStarting at:\t${CYAN}${current_skip}${NC}\n\tCount:\t\t${CYAN}${dd_count}${NC}... "
-			echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" >> $image_table
+		echo -e -n "Captureing:\n\tDisk:\t\t${CYAN}${disk}${NC}\n\tSection:\t${CYAN}${index}${NC}\n\tStarting at:\t${CYAN}${current_skip}${NC}\n\tCount:\t\t${CYAN}${dd_count}${NC}... "
+		echo "${disk}:${index}:${unit_size}:${dd_count}:${current_skip}" >> $image_table
+		
 		sudo dd if="$disk" \
-		   of="${WORKSPACE}/images/${index}.dd" \
 		   bs="${unit_size}" \
 		   count="${dd_count}" \
-		   skip="${current_skip}" &> /dev/null
+		   skip="${current_skip}" 2> /dev/null | ${output_handler} > ${WORKSPACE}/images/${index}${image_extension}
 
 		echo -e "[${GREEN}DONE${NC}]"
 		current_skip=$line_start
@@ -403,8 +414,17 @@ capture_parts () {
 
 confirm_hash () {
 	info_file="$WORKSPACE/capture.info"
-	image_sha=`cat ${WORKSPACE}/images/*.dd | sha256sum | cut -d' ' -f1`
-	image_md5=`cat ${WORKSPACE}/images/*.dd | md5sum | cut -d' ' -f1`
+
+	input_handler="cat"
+	image_extension=".dd"
+
+	if [[ ${COMPRESS} == "Yes" ]] ; then
+		input_handler="zcat"
+		image_extension=".dd.gz"
+	fi
+	
+	image_sha=`${input_handler} ${WORKSPACE}/images/*${image_extension} | sha256sum | cut -d' ' -f1`
+	image_md5=`${input_handler} ${WORKSPACE}/images/*${image_extension} | md5sum | cut -d' ' -f1`
 	disk_sha=`cat $info_file | sed -n 's|^SHA_Sum:\([0-9a-f]\+\)\+$|\1|p'`
 	disk_md5=`cat $info_file | sed -n 's|^MD5_Sum:\([0-9a-f]\+\)\+$|\1|p'`
 
@@ -420,14 +440,20 @@ confirm_hash () {
 
 
 generate_torrents () {
-	for file in `ls -1 $WORKSPACE/images/*.dd` ; do
+	image_extension=".dd"
+
+	if [[ ${COMPRESS} == "Yes" ]] ; then
+		image_extension=".dd.gz"
+	fi
+
+	for file in `ls -1 $WORKSPACE/images/*${image_extension}` ; do
 		ctorrent -t -u $ANNOUNCE -s ${file}.torrent -p $file &
 	done
 	wait
 }
 
 begin_seed () {
-	for file in `ls -1 $WORKSPACE/images/*.dd.torrent` ; do
+	for file in `ls -1 $WORKSPACE/images/*.torrent` ; do
 		if [[ $CTCS == "" ]] ; then
 			ctorrent $file > /dev/null &
 		else
